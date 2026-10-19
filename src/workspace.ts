@@ -26,9 +26,12 @@ export function workspaceSnapshot(): WorkspaceSnapshot {
 export class Notices {
   private readonly shown = new Set<string>();
 
+  constructor(private readonly log: vscode.LogOutputChannel) {}
+
   warnOnce(message: string): void {
     if (!this.shown.has(message)) {
       this.shown.add(message);
+      this.log.warn(message);
       void vscode.window.showWarningMessage(`Harness Launcher: ${message}`);
     }
   }

@@ -38,7 +38,9 @@ function terminalLocation(setting: TerminalLocationSetting): vscode.TerminalOpti
   }
 }
 
-export async function launchInTerminal(request: LaunchRequest): Promise<vscode.Terminal> {
+export type LaunchMethod = "shellIntegration" | "sendText";
+
+export async function launchInTerminal(request: LaunchRequest): Promise<LaunchMethod> {
   // No shellPath: the default profile keeps the user's PATH, profile and aliases,
   // and the terminal stays open after the CLI exits.
   const terminal = vscode.window.createTerminal({
@@ -52,10 +54,10 @@ export async function launchInTerminal(request: LaunchRequest): Promise<vscode.T
   const integration = await waitForShellIntegration(terminal, SHELL_INTEGRATION_TIMEOUT_MS);
   if (integration !== undefined) {
     integration.executeCommand(request.executable, [...request.args]);
-  } else {
-    terminal.sendText(displayCommandLine(request.executable, request.args), true);
+    return "shellIntegration";
   }
-  return terminal;
+  terminal.sendText(displayCommandLine(request.executable, request.args), true);
+  return "sendText";
 }
 
 function waitForShellIntegration(

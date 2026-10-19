@@ -35,9 +35,11 @@ export function activate(context: vscode.ExtensionContext): HarnessLauncherApi {
     home: homedir(),
     timeoutMs: PROBE_TIMEOUT_MS,
   });
-  const launcher = new Launcher(detector, context.extension.id);
+  const log = vscode.window.createOutputChannel("Harness Launcher", { log: true });
+  const launcher = new Launcher(detector, context.extension.id, log);
 
   context.subscriptions.push(
+    log,
     vscode.commands.registerCommand("harnessLauncher.open", () => launcher.open()),
     vscode.commands.registerCommand("harnessLauncher.launch", (args: unknown) => {
       if (!isLaunchArgs(args)) {

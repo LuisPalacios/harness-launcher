@@ -21,12 +21,15 @@ function settingsQuery(harness: Harness): string {
 }
 
 export class Launcher {
-  private readonly notices = new Notices();
+  private readonly notices: Notices;
 
   constructor(
     private readonly detector: Detector,
     private readonly extensionId: string,
-  ) {}
+    private readonly log: vscode.LogOutputChannel,
+  ) {
+    this.notices = new Notices(log);
+  }
 
   currentHarnesses(): Harness[] {
     const { value, errors } = readHarnesses(settingsReader());
@@ -105,13 +108,17 @@ export class Launcher {
       return;
     }
 
-    await launchInTerminal({
+    const location = readTerminalLocation(settingsReader());
+    const method = await launchInTerminal({
       name: harness.label,
       cwd: cwd.path,
       executable: line.executable,
       args: line.args,
-      location: readTerminalLocation(settingsReader()),
+      location,
     });
+    this.log.info(
+      `launch ${harness.id}/${action}: ${JSON.stringify([line.executable, ...line.args])} in ${cwd.path} (cwd ${cwd.mode}, ${location}, ${method})`,
+    );
   }
 
   refresh(): void {
@@ -143,6 +150,12 @@ export class Launcher {
   private async pickItems(): Promise<PickItem[]> {
     const harnesses = this.currentHarnesses().filter((h) => h.enabled !== "never");
     const detections = await Promise.all(harnesses.map((h) => this.detector.detect(h.command)));
+    harnesses.forEach((h, i) => {
+      const d = detections[i];
+      this.log.info(
+        `detect ${h.id} (${h.command}): ${d?.found ? `found ${d.path} "${d.version}"` : `not found${d?.path ? ` at ${d.path}` : ""}: ${d?.reason}`}`,
+      );
+    });
     const cwd = this.currentCwd();
     const where = cwd.kind === "pick" ? "choose folder" : cwd.path;
 
