@@ -79,6 +79,7 @@ export class Launcher {
       picker.dispose();
     });
 
+    this.log.info(`open: workspace ${vscode.workspace.isTrusted ? "trusted" : "not trusted (Restricted Mode)"}`);
     const items = await this.pickItems();
     if (hidden) {
       return;
