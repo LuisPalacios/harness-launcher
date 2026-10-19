@@ -1,14 +1,20 @@
 // Adapters from the VS Code API to the pure modules' inputs.
 import { homedir } from "node:os";
 import * as vscode from "vscode";
-import type { SettingsReader } from "./config";
+import { trustAwareReader, type SettingsReader } from "./config";
 import type { WorkspaceSnapshot } from "./cwd";
 
 export const SECTION = "harnessLauncher";
 
-export function settingsReader(): SettingsReader {
+export function settingsReader(restricted: ReadonlySet<string>, onIgnored?: (key: string) => void): SettingsReader {
   const config = vscode.workspace.getConfiguration(SECTION);
-  return (key) => config.get<unknown>(key);
+  return trustAwareReader({
+    read: (key) => config.get<unknown>(key),
+    inspect: (key) => config.inspect<unknown>(key),
+    restricted,
+    trusted: vscode.workspace.isTrusted,
+    ...(onIgnored === undefined ? {} : { onIgnored }),
+  });
 }
 
 export function workspaceSnapshot(): WorkspaceSnapshot {

@@ -1,10 +1,11 @@
 import { homedir } from "node:os";
 import * as vscode from "vscode";
-import type { Harness } from "./config";
+import { restrictedKeys, type Harness } from "./config";
 import type { CwdResolution } from "./cwd";
 import { createDetector, type Detection } from "./detect";
 import type { Action } from "./harnesses";
 import { Launcher } from "./launcher";
+import { SECTION } from "./workspace";
 
 const PROBE_TIMEOUT_MS = 3000;
 
@@ -36,7 +37,8 @@ export function activate(context: vscode.ExtensionContext): HarnessLauncherApi {
     timeoutMs: PROBE_TIMEOUT_MS,
   });
   const log = vscode.window.createOutputChannel("Harness Launcher", { log: true });
-  const launcher = new Launcher(detector, context.extension.id, log);
+  const restricted = restrictedKeys(context.extension.packageJSON, SECTION);
+  const launcher = new Launcher(detector, context.extension.id, log, restricted);
 
   context.subscriptions.push(
     log,

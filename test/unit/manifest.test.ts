@@ -3,7 +3,7 @@ import { describe, expect, test } from "bun:test";
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { CWD_MODES } from "../../src/cwd";
-import { DEFAULT_TERMINAL_LOCATION, ENABLED_VALUES, TERMINAL_LOCATIONS } from "../../src/config";
+import { DEFAULT_TERMINAL_LOCATION, ENABLED_VALUES, restrictedKeys, TERMINAL_LOCATIONS } from "../../src/config";
 import { BUILTIN_HARNESSES } from "../../src/harnesses";
 
 interface Property {
@@ -46,6 +46,10 @@ describe("package.json", () => {
     for (const field of ["command", "newArgs", "resumeArgs"]) {
       expect(restricted).toContain(`${key}.${field}`);
     }
+  });
+
+  test("the runtime guard reads every restricted key from the manifest", () => {
+    expect(restrictedKeys(manifest, "harnessLauncher").size).toBe(restricted.length);
   });
 
   test("execution-deciding settings are restricted in untrusted workspaces", () => {

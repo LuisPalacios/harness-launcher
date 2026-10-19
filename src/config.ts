@@ -6,6 +6,55 @@ import { BUILTIN_HARNESSES, type Action } from "./harnesses";
 
 export type SettingsReader = (key: string) => unknown;
 
+/** The subset of `WorkspaceConfiguration.inspect()` the trust guard needs. */
+export interface InspectedSetting {
+  readonly defaultValue?: unknown;
+  readonly globalValue?: unknown;
+  readonly workspaceValue?: unknown;
+  readonly workspaceFolderValue?: unknown;
+}
+
+/**
+ * In an untrusted workspace, restricted keys come from user settings or the
+ * default only. VS Code already filters them for `get()`; enforcing it here as
+ * well keeps the guarantee even if that filter ever lets a value through.
+ */
+export function trustAwareReader(options: {
+  readonly read: SettingsReader;
+  readonly inspect: (key: string) => InspectedSetting | undefined;
+  readonly restricted: ReadonlySet<string>;
+  readonly trusted: boolean;
+  readonly onIgnored?: (key: string) => void;
+}): SettingsReader {
+  const { read, inspect, restricted, trusted, onIgnored } = options;
+  if (trusted) {
+    return read;
+  }
+  return (key) => {
+    if (!restricted.has(key)) {
+      return read(key);
+    }
+    const inspected = inspect(key);
+    if (inspected?.workspaceValue !== undefined || inspected?.workspaceFolderValue !== undefined) {
+      onIgnored?.(key);
+    }
+    return inspected?.globalValue ?? inspected?.defaultValue;
+  };
+}
+
+/** Restricted keys from the manifest, relative to the `harnessLauncher` section. */
+export function restrictedKeys(packageJson: unknown, section: string): Set<string> {
+  const prefix = `${section}.`;
+  const list = (packageJson as { capabilities?: { untrustedWorkspaces?: { restrictedConfigurations?: unknown } } } | undefined)
+    ?.capabilities?.untrustedWorkspaces?.restrictedConfigurations;
+  if (!Array.isArray(list)) {
+    return new Set();
+  }
+  return new Set(
+    list.filter((k): k is string => typeof k === "string" && k.startsWith(prefix)).map((k) => k.slice(prefix.length)),
+  );
+}
+
 export const ENABLED_VALUES = ["auto", "always", "never"] as const;
 export type Enabled = (typeof ENABLED_VALUES)[number];
 

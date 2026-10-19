@@ -1,6 +1,13 @@
 // Command handlers: the quick pick, launching a harness and the cwd prompt.
 import * as vscode from "vscode";
-import { commandLineFor, readCwdSettings, readHarnesses, readTerminalLocation, type Harness } from "./config";
+import {
+  commandLineFor,
+  readCwdSettings,
+  readHarnesses,
+  readTerminalLocation,
+  type Harness,
+  type SettingsReader,
+} from "./config";
 import { resolveCwd, type CwdResolution } from "./cwd";
 import type { Detection, Detector } from "./detect";
 import type { Action } from "./harnesses";
@@ -27,18 +34,25 @@ export class Launcher {
     private readonly detector: Detector,
     private readonly extensionId: string,
     private readonly log: vscode.LogOutputChannel,
+    private readonly restricted: ReadonlySet<string>,
   ) {
     this.notices = new Notices(log);
   }
 
+  private settings(): SettingsReader {
+    return settingsReader(this.restricted, (key) =>
+      this.notices.warnOnce(`Restricted Mode: ignoring the workspace value of ${SECTION}.${key}; using your user setting.`),
+    );
+  }
+
   currentHarnesses(): Harness[] {
-    const { value, errors } = readHarnesses(settingsReader());
+    const { value, errors } = readHarnesses(this.settings());
     errors.forEach((e) => this.notices.warnOnce(e));
     return value;
   }
 
   currentCwd(): CwdResolution {
-    const { value, errors } = readCwdSettings(settingsReader());
+    const { value, errors } = readCwdSettings(this.settings());
     errors.forEach((e) => this.notices.warnOnce(e));
     return resolveCwd(value, workspaceSnapshot());
   }
@@ -108,7 +122,7 @@ export class Launcher {
       return;
     }
 
-    const location = readTerminalLocation(settingsReader());
+    const location = readTerminalLocation(this.settings());
     const method = await launchInTerminal({
       name: harness.label,
       cwd: cwd.path,

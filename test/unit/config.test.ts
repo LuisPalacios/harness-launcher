@@ -1,5 +1,14 @@
 import { describe, expect, test } from "bun:test";
-import { commandLineFor, readCwdSettings, readHarnesses, readTerminalLocation, type SettingsReader } from "../../src/config";
+import {
+  commandLineFor,
+  readCwdSettings,
+  readHarnesses,
+  readTerminalLocation,
+  restrictedKeys,
+  trustAwareReader,
+  type InspectedSetting,
+  type SettingsReader,
+} from "../../src/config";
 import { BUILTIN_HARNESSES } from "../../src/harnesses";
 
 function reader(values: Record<string, unknown>): SettingsReader {
@@ -120,5 +129,65 @@ describe("readCwdSettings and readTerminalLocation", () => {
   test("unknown values fall back", () => {
     expect(readCwdSettings(reader({ "cwd.mode": "everywhere" })).errors[0]).toContain("everywhere");
     expect(readTerminalLocation(reader({ "terminal.location": "floating" }))).toBe("editorBeside");
+  });
+});
+
+describe("trustAwareReader", () => {
+  // A get() that lets workspace values through, as if VS Code's own filter failed.
+  const inspected: Record<string, InspectedSetting> = {
+    "claude.command": { defaultValue: "claude", workspaceFolderValue: "echo" },
+    "claude.newArgs": { defaultValue: "", globalValue: "--verbose", workspaceValue: "pwned" },
+    "cwd.mode": { defaultValue: "workspaceFile", workspaceValue: "namedFolder" },
+  };
+  const merged: Record<string, unknown> = { "claude.command": "echo", "claude.newArgs": "pwned", "cwd.mode": "namedFolder" };
+  const restricted = new Set(["claude.command", "claude.newArgs"]);
+
+  function build(trusted: boolean, ignored: string[] = []): SettingsReader {
+    return trustAwareReader({
+      read: (key) => merged[key],
+      inspect: (key) => inspected[key],
+      restricted,
+      trusted,
+      onIgnored: (key) => ignored.push(key),
+    });
+  }
+
+  test("a trusted workspace reads merged values", () => {
+    const read = build(true);
+    expect(read("claude.command")).toBe("echo");
+    expect(read("claude.newArgs")).toBe("pwned");
+  });
+
+  test("an untrusted workspace reads restricted keys from user settings or the default", () => {
+    const ignored: string[] = [];
+    const read = build(false, ignored);
+    expect(read("claude.command")).toBe("claude");
+    expect(read("claude.newArgs")).toBe("--verbose");
+    expect(ignored).toEqual(["claude.command", "claude.newArgs"]);
+  });
+
+  test("unrestricted keys keep their workspace value", () => {
+    expect(build(false)("cwd.mode")).toBe("namedFolder");
+  });
+
+  test("the guard makes a workspace command invisible to readHarnesses", () => {
+    const claude = readHarnesses(build(false)).value.find((h) => h.id === "claude");
+    expect(claude).toMatchObject({ command: "claude", newArgs: "--verbose" });
+  });
+});
+
+describe("restrictedKeys", () => {
+  test("reads the manifest list relative to the section", () => {
+    const pkg = {
+      capabilities: {
+        untrustedWorkspaces: { restrictedConfigurations: ["harnessLauncher.claude.command", "other.key", 3, "harnessLauncher.cwd.path"] },
+      },
+    };
+    expect([...restrictedKeys(pkg, "harnessLauncher")]).toEqual(["claude.command", "cwd.path"]);
+  });
+
+  test("a manifest without the list gives an empty set", () => {
+    expect(restrictedKeys({}, "harnessLauncher").size).toBe(0);
+    expect(restrictedKeys(undefined, "harnessLauncher").size).toBe(0);
   });
 });
