@@ -135,6 +135,7 @@ export interface ProbeOptions {
 }
 
 const MAX_OUTPUT = 64 * 1024;
+const KILL_GRACE_MS = 2000;
 
 /** Runs the probe with stdin closed, so an interactive shim cannot wait for input. */
 export function probeVersion(spec: ProbeSpec, opts: ProbeOptions): Promise<ProbeResult> {
@@ -173,13 +174,23 @@ export function probeVersion(spec: ProbeSpec, opts: ProbeOptions): Promise<Probe
     });
     child.stderr?.resume();
 
+    const timeout: ProbeResult = { ok: false, reason: `--version gave no answer within ${opts.timeoutMs} ms` };
+    let timedOut = false;
     timer = setTimeout(() => {
+      // Report only once the tree is gone ("close" fires when every process holding
+      // the pipes has exited), so nothing outlives the probe. The cap covers a
+      // process that cannot be killed.
+      timedOut = true;
       killTree(child);
-      finish({ ok: false, reason: `--version gave no answer within ${opts.timeoutMs} ms` });
+      timer = setTimeout(() => finish(timeout), KILL_GRACE_MS);
     }, opts.timeoutMs);
 
     child.on("error", (error) => finish({ ok: false, reason: error.message }));
     child.on("close", (code) => {
+      if (timedOut) {
+        finish(timeout);
+        return;
+      }
       if (code !== 0) {
         finish({ ok: false, reason: `--version exited with code ${code ?? "null"}` });
         return;
