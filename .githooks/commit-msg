@@ -1,0 +1,23 @@
+#!/usr/bin/env bash
+# Reject commit messages that attribute authorship to an AI tool.
+# Enable once per clone: git config core.hooksPath .githooks
+set -euo pipefail
+
+msg_file="${1:?usage: commit-msg <message-file>}"
+
+# Ignore comment lines git strips anyway (verbose diffs, templates).
+body=$(grep -v '^#' "$msg_file" || true)
+
+ai='claude|anthropic|openai|chatgpt|gpt-?[0-9]|codex|copilot|cursor|gemini|aider|windsurf|devin'
+
+if printf '%s\n' "$body" | grep -Eiq "co-authored-by:.*($ai)"; then
+  echo "commit-msg: rejected, the message has an AI Co-Authored-By trailer." >&2
+  exit 1
+fi
+
+if printf '%s\n' "$body" | grep -Eiq "(generated|created|written|authored) (with|by) .*($ai)"; then
+  echo "commit-msg: rejected, the message credits an AI tool." >&2
+  exit 1
+fi
+
+exit 0

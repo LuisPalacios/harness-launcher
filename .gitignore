@@ -1,0 +1,30 @@
+# Build output
+dist/
+out/
+*.vsix
+
+# Dependencies
+node_modules/
+
+# VS Code test downloads
+.vscode-test/
+
+# OS
+.DS_Store
+Thumbs.db
+*.swp
+*~
+
+# Local environment (tokens, private paths)
+.env*
+
+# AI ignored paths
+/CONTINUITY*.md
+.continuity/
+.claude/*.local.*
+tmpclaude-*-cwd
+.gemini/
+.cursor/
+
+# Tmp folder
+tmp/
