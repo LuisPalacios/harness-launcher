@@ -106,7 +106,7 @@ describe("commandLineFor", () => {
 describe("readCwdSettings and readTerminalLocation", () => {
   test("defaults", () => {
     expect(readCwdSettings(reader({}))).toEqual({ value: { mode: "workspaceFile", folderName: "", path: "" }, errors: [] });
-    expect(readTerminalLocation(reader({}))).toBe("panel");
+    expect(readTerminalLocation(reader({}))).toBe("editorBeside");
   });
 
   test("valid values pass through", () => {
@@ -114,11 +114,11 @@ describe("readCwdSettings and readTerminalLocation", () => {
       mode: "namedFolder",
       folderName: "hub",
     });
-    expect(readTerminalLocation(reader({ "terminal.location": "editorBeside" }))).toBe("editorBeside");
+    expect(readTerminalLocation(reader({ "terminal.location": "panel" }))).toBe("panel");
   });
 
   test("unknown values fall back", () => {
     expect(readCwdSettings(reader({ "cwd.mode": "everywhere" })).errors[0]).toContain("everywhere");
-    expect(readTerminalLocation(reader({ "terminal.location": "floating" }))).toBe("panel");
+    expect(readTerminalLocation(reader({ "terminal.location": "floating" }))).toBe("editorBeside");
   });
 });

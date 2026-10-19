@@ -11,6 +11,8 @@ export type Enabled = (typeof ENABLED_VALUES)[number];
 
 export const TERMINAL_LOCATIONS = ["panel", "editor", "editorBeside"] as const;
 export type TerminalLocationSetting = (typeof TERMINAL_LOCATIONS)[number];
+/** An editor group beside the current one, so the session sits next to the code. */
+export const DEFAULT_TERMINAL_LOCATION: TerminalLocationSetting = "editorBeside";
 
 export interface Harness {
   readonly id: string;
@@ -148,5 +150,5 @@ export function readCwdSettings(read: SettingsReader): Settings<CwdSettings> {
 
 export function readTerminalLocation(read: SettingsReader): TerminalLocationSetting {
   const value = read("terminal.location");
-  return oneOf(TERMINAL_LOCATIONS, value) ? value : "panel";
+  return oneOf(TERMINAL_LOCATIONS, value) ? value : DEFAULT_TERMINAL_LOCATION;
 }

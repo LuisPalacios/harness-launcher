@@ -146,7 +146,7 @@
           },
           "harnessLauncher.terminal.location": {
             "type": "string",
-            "default": "panel",
+            "default": "editorBeside",
             "enum": [
               "panel",
               "editor",
