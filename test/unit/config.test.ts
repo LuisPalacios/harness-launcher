@@ -1,0 +1,124 @@
+import { describe, expect, test } from "bun:test";
+import { commandLineFor, readCwdSettings, readHarnesses, readTerminalLocation, type SettingsReader } from "../../src/config";
+import { BUILTIN_HARNESSES } from "../../src/harnesses";
+
+function reader(values: Record<string, unknown>): SettingsReader {
+  return (key) => values[key];
+}
+
+describe("readHarnesses", () => {
+  test("defaults give every built-in harness", () => {
+    const { value, errors } = readHarnesses(reader({}));
+    expect(errors).toEqual([]);
+    expect(value.map((h) => h.id)).toEqual(BUILTIN_HARNESSES.map((b) => b.id));
+    expect(value.find((h) => h.id === "claude")).toMatchObject({ command: "claude", resumeArgs: "--resume", enabled: "auto" });
+  });
+
+  test("flat settings override built-in fields", () => {
+    const { value } = readHarnesses(
+      reader({ "claude.command": "claude-dev", "claude.resumeArgs": "--continue", "codex.enabled": "never" }),
+    );
+    expect(value.find((h) => h.id === "claude")).toMatchObject({ command: "claude-dev", resumeArgs: "--continue" });
+    expect(value.find((h) => h.id === "codex")?.enabled).toBe("never");
+  });
+
+  test("an empty command falls back to the default", () => {
+    const { value } = readHarnesses(reader({ "claude.command": "  " }));
+    expect(value.find((h) => h.id === "claude")?.command).toBe("claude");
+  });
+
+  test("an invalid enabled value is reported", () => {
+    const { value, errors } = readHarnesses(reader({ "gemini.enabled": "sometimes" }));
+    expect(value.find((h) => h.id === "gemini")?.enabled).toBe("auto");
+    expect(errors[0]).toContain("harnessLauncher.gemini.enabled");
+  });
+
+  test("custom harnesses are appended", () => {
+    const { value, errors } = readHarnesses(
+      reader({ customHarnesses: [{ id: "aider", label: "Aider", command: "aider", resumeArgs: "--restore-chat-history" }] }),
+    );
+    expect(errors).toEqual([]);
+    expect(value.at(-1)).toEqual({
+      id: "aider",
+      label: "Aider",
+      command: "aider",
+      newArgs: "",
+      resumeArgs: "--restore-chat-history",
+      enabled: "auto",
+      source: "custom",
+    });
+  });
+
+  test("a custom entry with a built-in id overrides it and keeps its enabled setting", () => {
+    const { value } = readHarnesses(
+      reader({ "claude.enabled": "always", customHarnesses: [{ id: "claude", command: "/opt/claude/bin/claude", newArgs: "--verbose" }] }),
+    );
+    const claude = value.filter((h) => h.id === "claude");
+    expect(claude).toHaveLength(1);
+    expect(claude[0]).toMatchObject({ label: "Claude Code", command: "/opt/claude/bin/claude", newArgs: "--verbose", resumeArgs: "", enabled: "always", source: "custom" });
+  });
+
+  test("invalid custom entries are skipped with errors", () => {
+    const { value, errors } = readHarnesses(
+      reader({
+        customHarnesses: [
+          "nope",
+          { id: "bad id", command: "x" },
+          { id: "nocmd" },
+          { id: "dup", command: "a" },
+          { id: "dup", command: "b" },
+          { id: "typed", command: "t", newArgs: 3 },
+        ],
+      }),
+    );
+    expect(errors).toHaveLength(5);
+    expect(value.filter((h) => h.source === "custom").map((h) => [h.id, h.command])).toEqual([
+      ["dup", "a"],
+      ["typed", "t"],
+    ]);
+  });
+
+  test("a non-array customHarnesses is reported", () => {
+    expect(readHarnesses(reader({ customHarnesses: {} })).errors).toEqual(["harnessLauncher.customHarnesses must be an array"]);
+  });
+});
+
+describe("commandLineFor", () => {
+  const harnesses = readHarnesses(reader({ "claude.newArgs": '--model "x y"', "codex.resumeArgs": '"open' })).value;
+  const claude = harnesses.find((h) => h.id === "claude");
+  const codex = harnesses.find((h) => h.id === "codex");
+  if (claude === undefined || codex === undefined) {
+    throw new Error("built-ins missing");
+  }
+
+  test("parses the action's arguments", () => {
+    expect(commandLineFor(claude, "new")).toEqual({ ok: true, executable: "claude", args: ["--model", "x y"] });
+    expect(commandLineFor(claude, "resume")).toEqual({ ok: true, executable: "claude", args: ["--resume"] });
+  });
+
+  test("a parse error names the setting", () => {
+    const r = commandLineFor(codex, "resume");
+    expect(r.ok).toBe(false);
+    expect(!r.ok && r.error).toStartWith("harnessLauncher.codex.resumeArgs: unterminated double quote");
+  });
+});
+
+describe("readCwdSettings and readTerminalLocation", () => {
+  test("defaults", () => {
+    expect(readCwdSettings(reader({}))).toEqual({ value: { mode: "workspaceFile", folderName: "", path: "" }, errors: [] });
+    expect(readTerminalLocation(reader({}))).toBe("panel");
+  });
+
+  test("valid values pass through", () => {
+    expect(readCwdSettings(reader({ "cwd.mode": "namedFolder", "cwd.folderName": "hub" })).value).toMatchObject({
+      mode: "namedFolder",
+      folderName: "hub",
+    });
+    expect(readTerminalLocation(reader({ "terminal.location": "editorBeside" }))).toBe("editorBeside");
+  });
+
+  test("unknown values fall back", () => {
+    expect(readCwdSettings(reader({ "cwd.mode": "everywhere" })).errors[0]).toContain("everywhere");
+    expect(readTerminalLocation(reader({ "terminal.location": "floating" }))).toBe("panel");
+  });
+});
