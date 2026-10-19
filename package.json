@@ -5,6 +5,11 @@
   "version": "0.1.0",
   "publisher": "luispalacios",
   "license": "MIT",
+  "icon": "media/icon.png",
+  "galleryBanner": {
+    "color": "#1B1F3B",
+    "theme": "dark"
+  },
   "repository": {
     "type": "git",
     "url": "https://github.com/LuisPalacios/harness-launcher.git"
@@ -33,7 +38,375 @@
     "workspace"
   ],
   "activationEvents": [],
-  "contributes": {},
+  "capabilities": {
+    "virtualWorkspaces": false,
+    "untrustedWorkspaces": {
+      "supported": "limited",
+      "description": "In an untrusted workspace the launcher ignores workspace-level commands, arguments and paths, and uses only your user settings.",
+      "restrictedConfigurations": [
+        "harnessLauncher.customHarnesses",
+        "harnessLauncher.cwd.path",
+        "harnessLauncher.claude.command",
+        "harnessLauncher.claude.newArgs",
+        "harnessLauncher.claude.resumeArgs",
+        "harnessLauncher.codex.command",
+        "harnessLauncher.codex.newArgs",
+        "harnessLauncher.codex.resumeArgs",
+        "harnessLauncher.gemini.command",
+        "harnessLauncher.gemini.newArgs",
+        "harnessLauncher.gemini.resumeArgs",
+        "harnessLauncher.copilot.command",
+        "harnessLauncher.copilot.newArgs",
+        "harnessLauncher.copilot.resumeArgs",
+        "harnessLauncher.opencode.command",
+        "harnessLauncher.opencode.newArgs",
+        "harnessLauncher.opencode.resumeArgs"
+      ]
+    }
+  },
+  "contributes": {
+    "commands": [
+      {
+        "command": "harnessLauncher.open",
+        "title": "Open Launcher",
+        "category": "Harness Launcher",
+        "icon": "$(rocket)"
+      },
+      {
+        "command": "harnessLauncher.launch",
+        "title": "Launch Harness",
+        "category": "Harness Launcher"
+      },
+      {
+        "command": "harnessLauncher.refresh",
+        "title": "Refresh Detection",
+        "category": "Harness Launcher"
+      },
+      {
+        "command": "harnessLauncher.configure",
+        "title": "Configure",
+        "category": "Harness Launcher"
+      }
+    ],
+    "menus": {
+      "editor/title": [
+        {
+          "command": "harnessLauncher.open",
+          "group": "navigation"
+        }
+      ],
+      "commandPalette": [
+        {
+          "command": "harnessLauncher.launch",
+          "when": "false"
+        }
+      ]
+    },
+    "configuration": [
+      {
+        "title": "General",
+        "order": 0,
+        "properties": {
+          "harnessLauncher.cwd.mode": {
+            "type": "string",
+            "default": "workspaceFile",
+            "enum": [
+              "workspaceFile",
+              "namedFolder",
+              "firstFolder",
+              "activeFile",
+              "pick",
+              "path"
+            ],
+            "enumDescriptions": [
+              "Folder that contains the saved `.code-workspace` file: the hub of a multi-root workspace.",
+              "The workspace folder named in `#harnessLauncher.cwd.folderName#`.",
+              "The first folder of the workspace.",
+              "The workspace folder that holds the active editor's file.",
+              "Ask every time: the hub folder or any workspace folder.",
+              "The absolute path in `#harnessLauncher.cwd.path#`."
+            ],
+            "markdownDescription": "Working directory of the new terminal. When the mode cannot resolve (for example `workspaceFile` in a single-folder window), the terminal starts in the first workspace folder, then in your home folder, and a warning names the mode that failed. Set it at **Workspace** level to store the rule inside the `.code-workspace` file, so each hub carries its own.",
+            "scope": "window",
+            "order": 1
+          },
+          "harnessLauncher.cwd.folderName": {
+            "type": "string",
+            "default": "",
+            "markdownDescription": "Workspace folder name used by the `namedFolder` mode of `#harnessLauncher.cwd.mode#`. It matches the name shown in the Explorer.",
+            "scope": "window",
+            "order": 2
+          },
+          "harnessLauncher.cwd.path": {
+            "type": "string",
+            "default": "",
+            "markdownDescription": "Absolute path used by the `path` mode of `#harnessLauncher.cwd.mode#`. Supports `~`, `${userHome}`, `${workspaceFileDir}`, `${workspaceFolder}` (the first folder) and `${workspaceFolder:<name>}`.",
+            "scope": "window",
+            "order": 3
+          },
+          "harnessLauncher.terminal.location": {
+            "type": "string",
+            "default": "panel",
+            "enum": [
+              "panel",
+              "editor",
+              "editorBeside"
+            ],
+            "enumDescriptions": [
+              "Terminal panel.",
+              "Editor area, as a tab in the active group.",
+              "Editor area, in a group beside the active editor."
+            ],
+            "markdownDescription": "Where the new terminal opens.",
+            "order": 4
+          },
+          "harnessLauncher.customHarnesses": {
+            "type": "array",
+            "default": [],
+            "markdownDescription": "Extra harnesses, edited in `settings.json`. Each entry is `{ \"id\", \"label\", \"command\", \"newArgs\", \"resumeArgs\" }`; `id` and `command` are required. An entry whose `id` matches a built-in harness replaces its label, command and arguments.",
+            "items": {
+              "type": "object",
+              "required": [
+                "id",
+                "command"
+              ],
+              "additionalProperties": false,
+              "properties": {
+                "id": {
+                  "type": "string",
+                  "pattern": "^[A-Za-z0-9][A-Za-z0-9_-]*$",
+                  "description": "Unique id, also used by the harnessLauncher.launch command."
+                },
+                "label": {
+                  "type": "string",
+                  "description": "Name shown in the launcher and as the terminal name."
+                },
+                "command": {
+                  "type": "string",
+                  "description": "Executable name on PATH, or an absolute path."
+                },
+                "newArgs": {
+                  "type": "string",
+                  "description": "Arguments for New session."
+                },
+                "resumeArgs": {
+                  "type": "string",
+                  "description": "Arguments for Resume session."
+                }
+              }
+            },
+            "scope": "machine-overridable",
+            "order": 5
+          }
+        }
+      },
+      {
+        "title": "Claude Code",
+        "order": 1,
+        "properties": {
+          "harnessLauncher.claude.enabled": {
+            "type": "string",
+            "default": "auto",
+            "enum": [
+              "auto",
+              "always",
+              "never"
+            ],
+            "enumDescriptions": [
+              "Show Claude Code when its command is detected (found on PATH and `--version` prints a version).",
+              "Always show it, even when it is not detected.",
+              "Never show it."
+            ],
+            "markdownDescription": "When the launcher lists Claude Code.",
+            "order": 1
+          },
+          "harnessLauncher.claude.command": {
+            "type": "string",
+            "default": "claude",
+            "markdownDescription": "Executable for Claude Code: a name looked up on `PATH`, or an absolute path. Put arguments in the arguments settings, not here.",
+            "scope": "machine-overridable",
+            "order": 2
+          },
+          "harnessLauncher.claude.newArgs": {
+            "type": "string",
+            "default": "",
+            "markdownDescription": "Arguments for **New session**. Parsed like a shell: separate with spaces, group with `\"double\"` or `'single'` quotes. Each argument is passed quoted, never as raw shell text.",
+            "order": 3
+          },
+          "harnessLauncher.claude.resumeArgs": {
+            "type": "string",
+            "default": "--resume",
+            "markdownDescription": "Arguments for **Resume session**. The default `--resume` opens the session picker. Parsed like a shell: separate with spaces, group with `\"double\"` or `'single'` quotes. Each argument is passed quoted, never as raw shell text.",
+            "order": 4
+          }
+        }
+      },
+      {
+        "title": "Codex",
+        "order": 2,
+        "properties": {
+          "harnessLauncher.codex.enabled": {
+            "type": "string",
+            "default": "auto",
+            "enum": [
+              "auto",
+              "always",
+              "never"
+            ],
+            "enumDescriptions": [
+              "Show Codex when its command is detected (found on PATH and `--version` prints a version).",
+              "Always show it, even when it is not detected.",
+              "Never show it."
+            ],
+            "markdownDescription": "When the launcher lists Codex.",
+            "order": 1
+          },
+          "harnessLauncher.codex.command": {
+            "type": "string",
+            "default": "codex",
+            "markdownDescription": "Executable for Codex: a name looked up on `PATH`, or an absolute path. Put arguments in the arguments settings, not here.",
+            "scope": "machine-overridable",
+            "order": 2
+          },
+          "harnessLauncher.codex.newArgs": {
+            "type": "string",
+            "default": "",
+            "markdownDescription": "Arguments for **New session**. Parsed like a shell: separate with spaces, group with `\"double\"` or `'single'` quotes. Each argument is passed quoted, never as raw shell text.",
+            "order": 3
+          },
+          "harnessLauncher.codex.resumeArgs": {
+            "type": "string",
+            "default": "resume",
+            "markdownDescription": "Arguments for **Resume session**. The default `resume` opens the session picker. Parsed like a shell: separate with spaces, group with `\"double\"` or `'single'` quotes. Each argument is passed quoted, never as raw shell text.",
+            "order": 4
+          }
+        }
+      },
+      {
+        "title": "Gemini CLI",
+        "order": 3,
+        "properties": {
+          "harnessLauncher.gemini.enabled": {
+            "type": "string",
+            "default": "auto",
+            "enum": [
+              "auto",
+              "always",
+              "never"
+            ],
+            "enumDescriptions": [
+              "Show Gemini CLI when its command is detected (found on PATH and `--version` prints a version).",
+              "Always show it, even when it is not detected.",
+              "Never show it."
+            ],
+            "markdownDescription": "When the launcher lists Gemini CLI.",
+            "order": 1
+          },
+          "harnessLauncher.gemini.command": {
+            "type": "string",
+            "default": "gemini",
+            "markdownDescription": "Executable for Gemini CLI: a name looked up on `PATH`, or an absolute path. Put arguments in the arguments settings, not here.",
+            "scope": "machine-overridable",
+            "order": 2
+          },
+          "harnessLauncher.gemini.newArgs": {
+            "type": "string",
+            "default": "",
+            "markdownDescription": "Arguments for **New session**. Parsed like a shell: separate with spaces, group with `\"double\"` or `'single'` quotes. Each argument is passed quoted, never as raw shell text.",
+            "order": 3
+          },
+          "harnessLauncher.gemini.resumeArgs": {
+            "type": "string",
+            "default": "--resume latest",
+            "markdownDescription": "Arguments for **Resume session**. The default `--resume latest` resumes the most recent session. Parsed like a shell: separate with spaces, group with `\"double\"` or `'single'` quotes. Each argument is passed quoted, never as raw shell text.",
+            "order": 4
+          }
+        }
+      },
+      {
+        "title": "GitHub Copilot",
+        "order": 4,
+        "properties": {
+          "harnessLauncher.copilot.enabled": {
+            "type": "string",
+            "default": "auto",
+            "enum": [
+              "auto",
+              "always",
+              "never"
+            ],
+            "enumDescriptions": [
+              "Show GitHub Copilot when its command is detected (found on PATH and `--version` prints a version).",
+              "Always show it, even when it is not detected.",
+              "Never show it."
+            ],
+            "markdownDescription": "When the launcher lists GitHub Copilot.",
+            "order": 1
+          },
+          "harnessLauncher.copilot.command": {
+            "type": "string",
+            "default": "copilot",
+            "markdownDescription": "Executable for GitHub Copilot: a name looked up on `PATH`, or an absolute path. Put arguments in the arguments settings, not here.",
+            "scope": "machine-overridable",
+            "order": 2
+          },
+          "harnessLauncher.copilot.newArgs": {
+            "type": "string",
+            "default": "",
+            "markdownDescription": "Arguments for **New session**. Parsed like a shell: separate with spaces, group with `\"double\"` or `'single'` quotes. Each argument is passed quoted, never as raw shell text.",
+            "order": 3
+          },
+          "harnessLauncher.copilot.resumeArgs": {
+            "type": "string",
+            "default": "--resume",
+            "markdownDescription": "Arguments for **Resume session**. The default `--resume` opens the session picker. Parsed like a shell: separate with spaces, group with `\"double\"` or `'single'` quotes. Each argument is passed quoted, never as raw shell text.",
+            "order": 4
+          }
+        }
+      },
+      {
+        "title": "opencode",
+        "order": 5,
+        "properties": {
+          "harnessLauncher.opencode.enabled": {
+            "type": "string",
+            "default": "auto",
+            "enum": [
+              "auto",
+              "always",
+              "never"
+            ],
+            "enumDescriptions": [
+              "Show opencode when its command is detected (found on PATH and `--version` prints a version).",
+              "Always show it, even when it is not detected.",
+              "Never show it."
+            ],
+            "markdownDescription": "When the launcher lists opencode.",
+            "order": 1
+          },
+          "harnessLauncher.opencode.command": {
+            "type": "string",
+            "default": "opencode",
+            "markdownDescription": "Executable for opencode: a name looked up on `PATH`, or an absolute path. Put arguments in the arguments settings, not here.",
+            "scope": "machine-overridable",
+            "order": 2
+          },
+          "harnessLauncher.opencode.newArgs": {
+            "type": "string",
+            "default": "",
+            "markdownDescription": "Arguments for **New session**. Parsed like a shell: separate with spaces, group with `\"double\"` or `'single'` quotes. Each argument is passed quoted, never as raw shell text.",
+            "order": 3
+          },
+          "harnessLauncher.opencode.resumeArgs": {
+            "type": "string",
+            "default": "--continue",
+            "markdownDescription": "Arguments for **Resume session**. The default `--continue` continues the last session. Parsed like a shell: separate with spaces, group with `\"double\"` or `'single'` quotes. Each argument is passed quoted, never as raw shell text.",
+            "order": 4
+          }
+        }
+      }
+    ]
+  },
   "scripts": {
     "build": "bun esbuild.mjs",
     "watch": "bun esbuild.mjs --watch",
