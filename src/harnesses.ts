@@ -33,9 +33,8 @@ export const BUILTIN_HARNESSES: readonly HarnessDefinition[] = [
     label: "Gemini CLI",
     command: "gemini",
     newArgs: "",
-    // Unverified. `--resume` takes `latest`, an index or a session UUID; there is
+    // Verified on 0.38.2: `-r, --resume` takes "latest" or a session index; there is
     // no picker at launch (the picker is `/resume` inside a session).
-    // Source: https://github.com/google-gemini/gemini-cli/blob/main/docs/cli/cli-reference.md (checked 2026-10-19).
     resumeArgs: "--resume latest",
   },
   {
