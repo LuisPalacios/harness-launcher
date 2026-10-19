@@ -1,0 +1,58 @@
+{
+  "name": "harness-launcher",
+  "displayName": "Harness Launcher",
+  "description": "Start or resume an AI coding CLI in a terminal, in exactly the folder you want, with first-class multi-root support.",
+  "version": "0.1.0",
+  "publisher": "luispalacios",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/LuisPalacios/harness-launcher.git"
+  },
+  "bugs": {
+    "url": "https://github.com/LuisPalacios/harness-launcher/issues"
+  },
+  "homepage": "https://github.com/LuisPalacios/harness-launcher#readme",
+  "engines": {
+    "vscode": "^1.93.0"
+  },
+  "categories": [
+    "Other"
+  ],
+  "keywords": [
+    "terminal",
+    "cli",
+    "ai",
+    "agent",
+    "launcher",
+    "multi-root",
+    "workspace"
+  ],
+  "main": "./dist/extension.js",
+  "extensionKind": [
+    "workspace"
+  ],
+  "activationEvents": [],
+  "contributes": {},
+  "scripts": {
+    "build": "bun esbuild.mjs",
+    "watch": "bun esbuild.mjs --watch",
+    "typecheck": "tsc -p tsconfig.json && tsc -p test/unit && tsc -p test/integration",
+    "lint": "oxlint",
+    "test": "bun test test/unit",
+    "test:integration": "bun esbuild.mjs --tests && vscode-test",
+    "package": "bun esbuild.mjs --production && vsce package --no-dependencies"
+  },
+  "devDependencies": {
+    "@types/bun": "1.4.3",
+    "@types/mocha": "10.0.10",
+    "@types/node": "20.19.43",
+    "@types/vscode": "1.93.0",
+    "@vscode/test-cli": "0.0.15",
+    "@vscode/test-electron": "3.1.0",
+    "@vscode/vsce": "4.0.0",
+    "esbuild": "0.28.2",
+    "oxlint": "1.88.0",
+    "typescript": "7.0.2"
+  }
+}

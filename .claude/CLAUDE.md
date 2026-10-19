@@ -31,11 +31,14 @@ English is the only language of this repository: code, comments, docs, commit me
 
 ## Repository layout
 
-The layout is created in phase 1 of the kickoff plan. Keep this section in sync with the real tree.
+Keep this section in sync with the real tree.
 
-- `src/`: extension source. Pure modules (argument parser, shell quoting, working-directory resolver, PATH resolver, harness table) never import `vscode`, so Bun can unit-test them. VS Code glue lives in separate files.
-- `test/unit/`: Bun unit tests. `test/integration/`: `@vscode/test-cli` tests. `test/fixtures/`: a multi-root fixture workspace.
-- `dist/`: esbuild output, ignored by git.
+- `src/`: extension source. Pure modules (argument parser, shell quoting, working-directory resolver, PATH resolver, harness table) never import `vscode`, so Bun can unit-test them. VS Code glue lives in separate files; `src/extension.ts` is the entry point.
+- `test/unit/`: Bun unit tests. `test/integration/`: `@vscode/test-cli` tests. `test/fixtures/`: a multi-root fixture workspace. Each test folder has its own `tsconfig.json` (Bun or Mocha globals).
+- `media/`: Marketplace icon (original artwork, SVG source plus 128×128 PNG).
+- `esbuild.mjs`: bundles `src/extension.ts` into `dist/extension.js`; `--tests` also bundles the integration suite into `out/test/`.
+- `package.json`: manifest, settings contributions and scripts. `tsconfig.json`, `.oxlintrc.json`, `.vscodeignore`: tool config.
+- `dist/`, `out/`, `.vscode-test/`: build and test output, ignored by git.
 - `.claude/CLAUDE.md`: shared instructions; `.claude/context/`: task-specific guidance; `.claude/rules/`: authoring rules; `.claude/skills/`: canonical skills.
 - `AGENTS.md` links to `.claude/CLAUDE.md`; `.agents/skills` links to `../.claude/skills`.
 - `.githooks/`: tracked git hooks. `.github/workflows/`: CI and releases.
