@@ -104,7 +104,7 @@ function namedFolder(name: string, ws: WorkspaceSnapshot): Attempt {
   const folder = ws.folders.find((f) => f.name === name);
   if (folder === undefined) {
     const names = ws.folders.map((f) => f.name).join(", ") || "none";
-    return { ok: false, reason: `no workspace folder is named "${name}" (folders: ${names})` };
+    return { ok: false, reason: `no workspace folder has the Explorer name "${name}" (Explorer names: ${names})` };
   }
   return { ok: true, path: folder.fsPath };
 }

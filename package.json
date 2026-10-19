@@ -120,7 +120,7 @@
             ],
             "enumDescriptions": [
               "Folder that contains the saved `.code-workspace` file: the hub of a multi-root workspace.",
-              "The workspace folder named in `#harnessLauncher.cwd.folderName#`.",
+              "The workspace folder whose Explorer name matches `#harnessLauncher.cwd.folderName#`.",
               "The first folder of the workspace.",
               "The workspace folder that holds the active editor's file.",
               "Ask every time: the hub folder or any workspace folder.",
@@ -133,14 +133,14 @@
           "harnessLauncher.cwd.folderName": {
             "type": "string",
             "default": "",
-            "markdownDescription": "Workspace folder name used by the `namedFolder` mode of `#harnessLauncher.cwd.mode#`. It matches the name shown in the Explorer.",
+            "markdownDescription": "Workspace folder used by the `namedFolder` mode of `#harnessLauncher.cwd.mode#`. Type **the name the VS Code Explorer shows, not the folder name on disk**: in a `.code-workspace` file, a folder entry with `\"name\": \"My Clone\"` and `\"path\": \"my-clone\"` matches `My Clone`. The match is exact and case-sensitive.",
             "scope": "window",
             "order": 2
           },
           "harnessLauncher.cwd.path": {
             "type": "string",
             "default": "",
-            "markdownDescription": "Absolute path used by the `path` mode of `#harnessLauncher.cwd.mode#`. Supports `~`, `${userHome}`, `${workspaceFileDir}`, `${workspaceFolder}` (the first folder) and `${workspaceFolder:<name>}`.",
+            "markdownDescription": "Absolute path used by the `path` mode of `#harnessLauncher.cwd.mode#`. Supports `~`, `${userHome}`, `${workspaceFileDir}`, `${workspaceFolder}` (the first folder) and `${workspaceFolder:<name>}`, where `<name>` is the name the Explorer shows, not the folder name on disk.",
             "scope": "window",
             "order": 3
           },
