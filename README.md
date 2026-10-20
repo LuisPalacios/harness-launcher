@@ -197,12 +197,12 @@ The extension runs where the workspace lives, so in Remote SSH, WSL or a dev con
 
 ## Ideas
 
-Not in version 0.1, tracked as possible additions:
+Not in version 0.1. These are possible additions:
 
-- a "continue last session" action next to New and Resume;
-- a status bar button;
-- per-folder rules;
-- a session list read from each CLI's history files.
+- **Continue last session.** Most CLIs have two ways back in: a picker of past sessions (Claude Code's `--resume`) and a jump straight into the latest one (Claude Code's `--continue`). **Resume session** uses one of them per CLI today. This would offer both, side by side.
+- **Status bar button.** A rocket in the status bar at the bottom of the window that opens the same list. Unlike the title bar button, it stays visible with no file open, right when you reopen VS Code and want to resume. It could also resume the last harness you used in one click.
+- **Per-folder rules.** Today `cwd.mode` applies to the whole window: set it in user settings, or once per hub in the `.code-workspace` file. Per-folder rules would let each clone carry its own rule in its `.vscode/settings.json`, so a session started while you work in `Docs` opens in `Docs`, with its own arguments.
+- **Session list.** Show past sessions inside the launcher, read from each CLI's own history files, so you pick one there instead of in the CLI's picker. Those files are internal to each CLI and can change without notice, so this one is the most fragile.
 
 ## Development
 
