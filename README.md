@@ -42,10 +42,29 @@ Every line shows the exact command and directory it uses. The terminal opens bes
 
 ## Install
 
-- From VS Code: search for **Harness Launcher** in the Extensions view.
-- From a file: download the `.vsix` from the [releases](https://github.com/LuisPalacios/harness-launcher/releases), then run **Extensions: Install from VSIX…**.
+Before you start, make sure you have:
 
-The extension activates only when you click the button or run one of its commands.
+- VS Code 1.93 or later, or a compatible editor such as VSCodium or Cursor.
+- At least one harness CLI installed and working in a terminal, for example `claude --version` or `codex --version`. The extension launches these CLIs; it does not install them.
+
+Then install the extension in one of these ways:
+
+- **Extensions view (recommended):** press `Ctrl+Shift+X` (`Cmd+Shift+X` on macOS), search for **Harness Launcher**, and click **Install** on the entry with the rocket icon, published by **luispa**.
+
+  <img src="media/harness-install.png" width="487" alt="The Extensions view with Harness Launcher by luispa as the first search result">
+
+- **Command line:**
+
+  ```bash
+  code --install-extension luispa.harness-launcher
+  ```
+
+- **VSCodium, Cursor and other forks:** the same extension is on [Open VSX](https://open-vsx.org/extension/luispa/harness-launcher), so their Extensions view finds it with the same search.
+- **Offline, from a file:** download the `.vsix` from the [latest release](https://github.com/LuisPalacios/harness-launcher/releases/latest), then run **Extensions: Install from VSIX…** from the Command Palette.
+
+To check it worked, open any file: the rocket appears at the right end of the editor tab row. Click it, and the list shows every harness it detected. If a CLI you installed is missing, see [Troubleshooting](#troubleshooting).
+
+The extension activates only when you click the button or run one of its commands, so it adds nothing to VS Code's startup time.
 
 ## Use
 
