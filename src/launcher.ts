@@ -2,6 +2,7 @@
 import * as vscode from "vscode";
 import {
   commandLineFor,
+  offersContinue,
   readCwdSettings,
   readHarnesses,
   readTerminalLocation,
@@ -18,8 +19,9 @@ interface PickItem extends vscode.QuickPickItem {
   readonly run?: () => Promise<void>;
 }
 
-const ACTIONS: readonly { readonly action: Action; readonly icon: string; readonly title: string }[] = [
+const ACTION_ITEMS: readonly { readonly action: Action; readonly icon: string; readonly title: string }[] = [
   { action: "new", icon: "add", title: "New session" },
+  { action: "continue", icon: "debug-continue", title: "Continue last session" },
   { action: "resume", icon: "history", title: "Resume session" },
 ];
 
@@ -181,8 +183,10 @@ export class Launcher {
         return;
       }
       items.push({ label: harness.label, kind: vscode.QuickPickItemKind.Separator });
-      for (const a of ACTIONS) {
-        items.push(this.actionItem(harness, a, where, detection));
+      for (const a of ACTION_ITEMS) {
+        if (a.action !== "continue" || offersContinue(harness)) {
+          items.push(this.actionItem(harness, a, where, detection));
+        }
       }
     });
 
@@ -198,7 +202,7 @@ export class Launcher {
     return items;
   }
 
-  private actionItem(harness: Harness, a: (typeof ACTIONS)[number], where: string, detection: Detection): PickItem {
+  private actionItem(harness: Harness, a: (typeof ACTION_ITEMS)[number], where: string, detection: Detection): PickItem {
     const line = commandLineFor(harness, a.action);
     if (!line.ok) {
       return {
