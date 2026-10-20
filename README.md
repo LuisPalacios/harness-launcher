@@ -68,7 +68,7 @@ Then install the extension in one of these ways:
 - **Extensions view (recommended):** press `Ctrl+Shift+X` (`Cmd+Shift+X` on macOS), search for **Harness Launcher**, and click **Install** on the entry with the rocket icon, published by **luispa**.
 
   <p align="center">
-    <img src="media/harness-install.png" width="487" alt="The Extensions view with Harness Launcher by luispa as the first search result">
+    <img src="media/harness-install.png" width="450" alt="The Extensions view with Harness Launcher by luispa as the first search result">
   </p>
 
 - **Command line:**
