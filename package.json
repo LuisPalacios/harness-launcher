@@ -37,7 +37,9 @@
   "extensionKind": [
     "workspace"
   ],
-  "activationEvents": [],
+  "activationEvents": [
+    "onStartupFinished"
+  ],
   "capabilities": {
     "virtualWorkspaces": false,
     "untrustedWorkspaces": {
@@ -48,18 +50,23 @@
         "harnessLauncher.cwd.path",
         "harnessLauncher.claude.command",
         "harnessLauncher.claude.newArgs",
+        "harnessLauncher.claude.continueArgs",
         "harnessLauncher.claude.resumeArgs",
         "harnessLauncher.codex.command",
         "harnessLauncher.codex.newArgs",
+        "harnessLauncher.codex.continueArgs",
         "harnessLauncher.codex.resumeArgs",
         "harnessLauncher.gemini.command",
         "harnessLauncher.gemini.newArgs",
+        "harnessLauncher.gemini.continueArgs",
         "harnessLauncher.gemini.resumeArgs",
         "harnessLauncher.copilot.command",
         "harnessLauncher.copilot.newArgs",
+        "harnessLauncher.copilot.continueArgs",
         "harnessLauncher.copilot.resumeArgs",
         "harnessLauncher.opencode.command",
         "harnessLauncher.opencode.newArgs",
+        "harnessLauncher.opencode.continueArgs",
         "harnessLauncher.opencode.resumeArgs"
       ]
     }
@@ -163,10 +170,16 @@
             "markdownDescription": "Where the new terminal opens.",
             "order": 4
           },
+          "harnessLauncher.statusBar.enabled": {
+            "type": "boolean",
+            "default": true,
+            "markdownDescription": "Show a rocket button in the status bar that opens the launcher. Unlike the editor title button, it stays visible with no file open.",
+            "order": 5
+          },
           "harnessLauncher.customHarnesses": {
             "type": "array",
             "default": [],
-            "markdownDescription": "Extra harnesses, edited in `settings.json`. Each entry is `{ \"id\", \"label\", \"command\", \"newArgs\", \"resumeArgs\" }`; `id` and `command` are required. An entry whose `id` matches a built-in harness replaces its label, command and arguments.",
+            "markdownDescription": "Extra harnesses, edited in `settings.json`. Each entry is `{ \"id\", \"label\", \"command\", \"newArgs\", \"continueArgs\", \"resumeArgs\" }`; `id` and `command` are required. Without `continueArgs` the harness has no **Continue last session** action. An entry whose `id` matches a built-in harness replaces its label, command and arguments.",
             "items": {
               "type": "object",
               "required": [
@@ -192,6 +205,10 @@
                   "type": "string",
                   "description": "Arguments for New session."
                 },
+                "continueArgs": {
+                  "type": "string",
+                  "description": "Arguments for Continue last session. Leave it out when the CLI has no way to jump to its latest session."
+                },
                 "resumeArgs": {
                   "type": "string",
                   "description": "Arguments for Resume session."
@@ -199,7 +216,7 @@
               }
             },
             "scope": "machine-overridable",
-            "order": 5
+            "order": 6
           }
         }
       },
@@ -236,11 +253,17 @@
             "markdownDescription": "Arguments for **New session**. Parsed like a shell: separate with spaces, group with `\"double\"` or `'single'` quotes. Each argument is passed quoted, never as raw shell text.",
             "order": 3
           },
+          "harnessLauncher.claude.continueArgs": {
+            "type": "string",
+            "default": "--continue",
+            "markdownDescription": "Arguments for **Continue last session**. The default `--continue` opens the most recent conversation without the session picker. The launcher hides this action when it matches New or Resume. Parsed like a shell: separate with spaces, group with `\"double\"` or `'single'` quotes. Each argument is passed quoted, never as raw shell text.",
+            "order": 4
+          },
           "harnessLauncher.claude.resumeArgs": {
             "type": "string",
             "default": "--resume",
             "markdownDescription": "Arguments for **Resume session**. The default `--resume` opens the session picker. Parsed like a shell: separate with spaces, group with `\"double\"` or `'single'` quotes. Each argument is passed quoted, never as raw shell text.",
-            "order": 4
+            "order": 5
           }
         }
       },
@@ -277,11 +300,17 @@
             "markdownDescription": "Arguments for **New session**. Parsed like a shell: separate with spaces, group with `\"double\"` or `'single'` quotes. Each argument is passed quoted, never as raw shell text.",
             "order": 3
           },
+          "harnessLauncher.codex.continueArgs": {
+            "type": "string",
+            "default": "resume --last",
+            "markdownDescription": "Arguments for **Continue last session**. The default `resume --last` opens the most recent session without the session picker. The launcher hides this action when it matches New or Resume. Parsed like a shell: separate with spaces, group with `\"double\"` or `'single'` quotes. Each argument is passed quoted, never as raw shell text.",
+            "order": 4
+          },
           "harnessLauncher.codex.resumeArgs": {
             "type": "string",
             "default": "resume",
             "markdownDescription": "Arguments for **Resume session**. The default `resume` opens the session picker. Parsed like a shell: separate with spaces, group with `\"double\"` or `'single'` quotes. Each argument is passed quoted, never as raw shell text.",
-            "order": 4
+            "order": 5
           }
         }
       },
@@ -318,11 +347,17 @@
             "markdownDescription": "Arguments for **New session**. Parsed like a shell: separate with spaces, group with `\"double\"` or `'single'` quotes. Each argument is passed quoted, never as raw shell text.",
             "order": 3
           },
+          "harnessLauncher.gemini.continueArgs": {
+            "type": "string",
+            "default": "--resume latest",
+            "markdownDescription": "Arguments for **Continue last session**. The default `--resume latest` is the same as **Resume session**, because Gemini CLI has no session picker at launch, so the launcher shows no separate Continue item. The launcher hides this action when it matches New or Resume. Parsed like a shell: separate with spaces, group with `\"double\"` or `'single'` quotes. Each argument is passed quoted, never as raw shell text.",
+            "order": 4
+          },
           "harnessLauncher.gemini.resumeArgs": {
             "type": "string",
             "default": "--resume latest",
             "markdownDescription": "Arguments for **Resume session**. The default `--resume latest` resumes the most recent session. Parsed like a shell: separate with spaces, group with `\"double\"` or `'single'` quotes. Each argument is passed quoted, never as raw shell text.",
-            "order": 4
+            "order": 5
           }
         }
       },
@@ -359,11 +394,17 @@
             "markdownDescription": "Arguments for **New session**. Parsed like a shell: separate with spaces, group with `\"double\"` or `'single'` quotes. Each argument is passed quoted, never as raw shell text.",
             "order": 3
           },
+          "harnessLauncher.copilot.continueArgs": {
+            "type": "string",
+            "default": "--continue",
+            "markdownDescription": "Arguments for **Continue last session**. The default `--continue` resumes the most recent session without the session picker. The launcher hides this action when it matches New or Resume. Parsed like a shell: separate with spaces, group with `\"double\"` or `'single'` quotes. Each argument is passed quoted, never as raw shell text.",
+            "order": 4
+          },
           "harnessLauncher.copilot.resumeArgs": {
             "type": "string",
             "default": "--resume",
             "markdownDescription": "Arguments for **Resume session**. The default `--resume` opens the session picker. Parsed like a shell: separate with spaces, group with `\"double\"` or `'single'` quotes. Each argument is passed quoted, never as raw shell text.",
-            "order": 4
+            "order": 5
           }
         }
       },
@@ -400,11 +441,17 @@
             "markdownDescription": "Arguments for **New session**. Parsed like a shell: separate with spaces, group with `\"double\"` or `'single'` quotes. Each argument is passed quoted, never as raw shell text.",
             "order": 3
           },
+          "harnessLauncher.opencode.continueArgs": {
+            "type": "string",
+            "default": "--continue",
+            "markdownDescription": "Arguments for **Continue last session**. The default `--continue` is the same as **Resume session**, because opencode has no session picker at launch, so the launcher shows no separate Continue item. The launcher hides this action when it matches New or Resume. Parsed like a shell: separate with spaces, group with `\"double\"` or `'single'` quotes. Each argument is passed quoted, never as raw shell text.",
+            "order": 4
+          },
           "harnessLauncher.opencode.resumeArgs": {
             "type": "string",
             "default": "--continue",
             "markdownDescription": "Arguments for **Resume session**. The default `--continue` continues the last session. Parsed like a shell: separate with spaces, group with `\"double\"` or `'single'` quotes. Each argument is passed quoted, never as raw shell text.",
-            "order": 4
+            "order": 5
           }
         }
       }

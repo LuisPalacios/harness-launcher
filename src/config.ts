@@ -68,6 +68,8 @@ export interface Harness {
   readonly label: string;
   readonly command: string;
   readonly newArgs: string;
+  /** Undefined for a custom harness without `continueArgs`: it has no Continue action. */
+  readonly continueArgs: string | undefined;
   readonly resumeArgs: string;
   readonly enabled: Enabled;
   readonly source: "builtin" | "custom";
@@ -102,6 +104,7 @@ export function readHarnesses(read: SettingsReader): Settings<Harness[]> {
       label: b.label,
       command: str(read(`${b.id}.command`), b.command).trim() || b.command,
       newArgs: str(read(`${b.id}.newArgs`), b.newArgs),
+      continueArgs: str(read(`${b.id}.continueArgs`), b.continueArgs),
       resumeArgs: str(read(`${b.id}.resumeArgs`), b.resumeArgs),
       enabled: oneOf(ENABLED_VALUES, enabled) ? enabled : "auto",
       source: "builtin",
@@ -136,7 +139,7 @@ export function readHarnesses(read: SettingsReader): Settings<Harness[]> {
       errors.push(`${where}.command must be a non-empty string`);
       return;
     }
-    for (const key of ["label", "newArgs", "resumeArgs"]) {
+    for (const key of ["label", "newArgs", "continueArgs", "resumeArgs"]) {
       if (e[key] !== undefined && typeof e[key] !== "string") {
         errors.push(`${where}.${key} must be a string`);
       }
@@ -149,6 +152,7 @@ export function readHarnesses(read: SettingsReader): Settings<Harness[]> {
       label: str(e["label"], builtin?.label ?? id).trim() || id,
       command: command.trim(),
       newArgs: str(e["newArgs"], ""),
+      continueArgs: typeof e["continueArgs"] === "string" ? e["continueArgs"] : undefined,
       resumeArgs: str(e["resumeArgs"], ""),
       enabled: builtin?.enabled ?? "auto",
       source: "custom",
@@ -158,8 +162,13 @@ export function readHarnesses(read: SettingsReader): Settings<Harness[]> {
   return { value: [...byId.values()], errors };
 }
 
+const ARGS_FIELD = { new: "newArgs", continue: "continueArgs", resume: "resumeArgs" } as const satisfies Record<
+  Action,
+  keyof Harness
+>;
+
 export function argsSettingName(harness: Harness, action: Action): string {
-  const field = action === "new" ? "newArgs" : "resumeArgs";
+  const field = ARGS_FIELD[action];
   return harness.source === "builtin"
     ? `harnessLauncher.${harness.id}.${field}`
     : `harnessLauncher.customHarnesses (id "${harness.id}") ${field}`;
@@ -170,7 +179,10 @@ export type CommandLine =
   | { readonly ok: false; readonly error: string };
 
 export function commandLineFor(harness: Harness, action: Action): CommandLine {
-  const raw = action === "new" ? harness.newArgs : harness.resumeArgs;
+  const raw = harness[ARGS_FIELD[action]];
+  if (raw === undefined) {
+    return { ok: false, error: `${argsSettingName(harness, action)} is not set, so ${harness.label} has no Continue action` };
+  }
   try {
     return { ok: true, executable: harness.command, args: parseArgs(raw) };
   } catch (error) {
@@ -179,6 +191,33 @@ export function commandLineFor(harness: Harness, action: Action): CommandLine {
     }
     throw error;
   }
+}
+
+function sameArgs(a: readonly string[], b: readonly string[]): boolean {
+  return a.length === b.length && a.every((arg, i) => arg === b[i]);
+}
+
+/**
+ * Continue gets its own launcher item only when it runs something New and Resume
+ * do not: for a CLI whose resume already jumps to the latest session it would be
+ * a duplicate. A Continue line that does not parse is offered, so its error shows.
+ */
+export function offersContinue(harness: Harness): boolean {
+  if (harness.continueArgs === undefined) {
+    return false;
+  }
+  const line = commandLineFor(harness, "continue");
+  if (!line.ok) {
+    return true;
+  }
+  return (["new", "resume"] as const).every((other) => {
+    const o = commandLineFor(harness, other);
+    return !o.ok || !sameArgs(o.args, line.args);
+  });
+}
+
+export function readStatusBarEnabled(read: SettingsReader): boolean {
+  return read("statusBar.enabled") !== false;
 }
 
 export function readCwdSettings(read: SettingsReader): Settings<CwdSettings> {

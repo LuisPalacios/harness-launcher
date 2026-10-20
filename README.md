@@ -27,13 +27,15 @@ One button in the editor title bar starts or resumes an AI coding CLI (a "harnes
 It is built for multi-root workspaces. Picture a hub folder holding a `.code-workspace` file, with several repository clones below it. The launcher starts every session **in the hub, never in one of the clones**, unless you tell it otherwise. Each hub can carry its own rule inside its `.code-workspace` file.
 
 ```text
-── Claude Code ─────────────────────────────────────────────
-  + New session        claude                · ~/work/hub
-  ↺ Resume session     claude --resume       · ~/work/hub
-── Codex ───────────────────────────────────────────────────
-  + New session        codex                 · ~/work/hub
-  ↺ Resume session     codex resume          · ~/work/hub
-────────────────────────────────────────────────────────────
+── Claude Code ─────────────────────────────────────────────────
+  + New session             claude                · ~/work/hub
+  ▷ Continue last session   claude --continue     · ~/work/hub
+  ↺ Resume session          claude --resume       · ~/work/hub
+── Codex ───────────────────────────────────────────────────────
+  + New session             codex                 · ~/work/hub
+  ▷ Continue last session   codex resume --last   · ~/work/hub
+  ↺ Resume session          codex resume          · ~/work/hub
+────────────────────────────────────────────────────────────────
   ⟳ Refresh detection
   ⚙ Configure…
 ```
@@ -82,15 +84,19 @@ Then install the extension in one of these ways:
 
 To check it worked, open any file: the rocket appears at the right end of the editor tab row. Click it, and the list shows every harness it detected. If a CLI you installed is missing, see [Troubleshooting](#troubleshooting).
 
-The extension activates only when you click the button or run one of its commands, so it adds nothing to VS Code's startup time.
+The extension activates after VS Code finishes starting, only to show its status bar button. It does not look for CLIs until you open the launcher, so it adds nothing to VS Code's startup time.
 
 ## Use
 
-1. Open any file, so the editor title bar shows.
-2. Click the rocket icon at the right end of the tab row. If the row is crowded, it sits in the row's **`…`** menu.
-3. Pick **New session** or **Resume session** under a harness.
+1. Click the rocket in the status bar, at the bottom right of the window. With a file open, the same rocket also sits at the right end of the editor's tab row (or in the row's **`…`** menu when it is crowded).
+2. Pick an action under a harness:
+   - **New session** starts a fresh session.
+   - **Continue last session** jumps straight into the most recent session.
+   - **Resume session** opens the CLI's own picker of past sessions.
 
 Run **Harness Launcher: Open Launcher** from the Command Palette to do the same without the mouse.
+
+**Continue last session** appears only when the CLI has a separate way to do it. For Gemini CLI and opencode, **Resume session** already opens the latest session, so the launcher shows no duplicate item. To hide the status bar button, turn off `harnessLauncher.statusBar.enabled`.
 
 To bind a key directly to one action, add this to `keybindings.json`:
 
@@ -102,17 +108,17 @@ To bind a key directly to one action, add this to `keybindings.json`:
 }
 ```
 
-`harness` is a harness id from the table below (or a custom one), and `action` is `new` or `resume`.
+`harness` is a harness id from the table below (or a custom one), and `action` is `new`, `continue` or `resume`.
 
 ## Built-in harnesses
 
-| Id         | Name           | Command    | Resume arguments                        | Checked                         |
-| ---------- | -------------- | ---------- | --------------------------------------- | ------------------------------- |
-| `claude`   | Claude Code    | `claude`   | `--resume` (session picker)             | Verified on 2.1.303             |
-| `codex`    | Codex          | `codex`    | `resume` (session picker)               | Verified on 0.160.1 and 0.162.1 |
-| `gemini`   | Gemini CLI     | `gemini`   | `--resume latest` (most recent session) | Verified on 0.38.2              |
-| `copilot`  | GitHub Copilot | `copilot`  | `--resume` (session picker)             | From the official docs, not run |
-| `opencode` | opencode       | `opencode` | `--continue` (last session)             | From the official docs, not run |
+| Id         | Name           | Command    | Continue arguments                    | Resume arguments                        | Checked                         |
+| ---------- | -------------- | ---------- | ------------------------------------- | --------------------------------------- | ------------------------------- |
+| `claude`   | Claude Code    | `claude`   | `--continue` (most recent session)    | `--resume` (session picker)             | Verified on 2.1.304             |
+| `codex`    | Codex          | `codex`    | `resume --last` (most recent session) | `resume` (session picker)               | Verified on 0.160.1             |
+| `gemini`   | Gemini CLI     | `gemini`   | same as Resume, not shown             | `--resume latest` (most recent session) | Verified on 0.38.2              |
+| `copilot`  | GitHub Copilot | `copilot`  | `--continue` (most recent session)    | `--resume` (session picker)             | From the official docs, not run |
+| `opencode` | opencode       | `opencode` | same as Resume, not shown             | `--continue` (last session)             | From the official docs, not run |
 
 New sessions run the bare command. Change any command or argument from the Settings UI.
 
@@ -128,9 +134,11 @@ Open **Harness Launcher: Configure** or search `@ext:luispa.harness-launcher` in
 | `harnessLauncher.cwd.folderName`    | `""`                | Folder for `namedFolder` mode: the name the Explorer shows, not the folder name on disk.                                              |
 | `harnessLauncher.cwd.path`          | `""`                | Absolute path for `path` mode. Supports `~`, `${userHome}`, `${workspaceFileDir}`, `${workspaceFolder}`, `${workspaceFolder:<name>}`. |
 | `harnessLauncher.terminal.location` | `editorBeside`      | `editorBeside`, `editor` or `panel`.                                                                                                  |
+| `harnessLauncher.statusBar.enabled` | `true`              | Show the rocket button in the status bar.                                                                                             |
 | `harnessLauncher.<id>.enabled`      | `auto`              | `auto` (when detected), `always` or `never`.                                                                                          |
 | `harnessLauncher.<id>.command`      | the CLI name        | Executable name on `PATH`, or an absolute path.                                                                                       |
 | `harnessLauncher.<id>.newArgs`      | `""`                | Arguments for **New session**.                                                                                                        |
+| `harnessLauncher.<id>.continueArgs` | see the table above | Arguments for **Continue last session**. The item is hidden when they match New or Resume.                                            |
 | `harnessLauncher.<id>.resumeArgs`   | see the table above | Arguments for **Resume session**.                                                                                                     |
 | `harnessLauncher.customHarnesses`   | `[]`                | Extra harnesses, edited in `settings.json`.                                                                                           |
 
@@ -186,7 +194,7 @@ A repository could set `command` or arguments in its own `.vscode/settings.json`
 
 ## Troubleshooting
 
-- **The button is missing.** Open a file: the button lives in the editor's tab row, which only shows when a file is open.
+- **The button is missing.** The status bar rocket is always there unless `harnessLauncher.statusBar.enabled` is off. The tab row rocket only shows when a file is open.
 - **A CLI is not detected.** Open **View → Output** and select **Harness Launcher**. The log shows each detection, the path it resolved and why it was rejected.
 - **A CLI installed after VS Code started is not found.** The extension sees the `PATH` VS Code started with. Restart VS Code, then click **Refresh detection**.
 - **A `.ps1` command is not detected on Windows.** The probe runs `powershell.exe`, so the PowerShell execution policy applies. Set the harness to `always`, or point `command` at the `.exe`.
@@ -194,15 +202,6 @@ A repository could set `command` or arguments in its own `.vscode/settings.json`
 ## Remote and containers
 
 The extension runs where the workspace lives, so in Remote SSH, WSL or a dev container it detects CLIs and opens terminals on the remote side. I have not tested it remotely yet; reports are welcome.
-
-## Ideas
-
-Not in version 0.1. These are possible additions:
-
-- **Continue last session.** Most CLIs have two ways back in: a picker of past sessions (Claude Code's `--resume`) and a jump straight into the latest one (Claude Code's `--continue`). **Resume session** uses one of them per CLI today. This would offer both, side by side.
-- **Status bar button.** A rocket in the status bar at the bottom of the window that opens the same list. Unlike the title bar button, it stays visible with no file open, right when you reopen VS Code and want to resume. It could also resume the last harness you used in one click.
-- **Per-folder rules.** Today `cwd.mode` applies to the whole window: set it in user settings, or once per hub in the `.code-workspace` file. Per-folder rules would let each clone carry its own rule in its `.vscode/settings.json`, so a session started while you work in `Docs` opens in `Docs`, with its own arguments.
-- **Session list.** Show past sessions inside the launcher, read from each CLI's own history files, so you pick one there instead of in the CLI's picker. Those files are internal to each CLI and can change without notice, so this one is the most fragile.
 
 ## Development
 

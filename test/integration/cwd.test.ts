@@ -158,6 +158,19 @@ describe("harness settings and commands", () => {
     assert.equal(terminal.name, "Probe Harness");
   });
 
+  it("launch accepts the continue action from a key binding", async () => {
+    await set({ customHarnesses: [{ id: "probe", label: "Continue Probe", command: "node", continueArgs: "--version" }] }, Global);
+    const opened = new Promise<vscode.Terminal>((done) => {
+      const listener = vscode.window.onDidOpenTerminal((t) => {
+        listener.dispose();
+        done(t);
+      });
+    });
+    await vscode.commands.executeCommand("harnessLauncher.launch", { harness: "probe", action: "continue" });
+    const terminal = await opened;
+    assert.equal(terminal.name, "Continue Probe");
+  });
+
   it("open shows the quick pick without throwing", async () => {
     await vscode.commands.executeCommand("harnessLauncher.open");
     await vscode.commands.executeCommand("workbench.action.closeQuickOpen");

@@ -1,8 +1,10 @@
 import { describe, expect, test } from "bun:test";
 import {
   commandLineFor,
+  offersContinue,
   readCwdSettings,
   readHarnesses,
+  readStatusBarEnabled,
   readTerminalLocation,
   restrictedKeys,
   trustAwareReader,
@@ -52,10 +54,31 @@ describe("readHarnesses", () => {
       label: "Aider",
       command: "aider",
       newArgs: "",
+      continueArgs: undefined,
       resumeArgs: "--restore-chat-history",
       enabled: "auto",
       source: "custom",
     });
+  });
+
+  test("built-ins carry their continue arguments", () => {
+    const { value } = readHarnesses(reader({ "codex.continueArgs": "resume --last --all" }));
+    expect(value.find((h) => h.id === "claude")?.continueArgs).toBe("--continue");
+    expect(value.find((h) => h.id === "codex")?.continueArgs).toBe("resume --last --all");
+  });
+
+  test("a custom entry keeps continueArgs only when it sets one", () => {
+    const { value, errors } = readHarnesses(
+      reader({
+        customHarnesses: [
+          { id: "with", command: "w", continueArgs: "--last" },
+          { id: "typed", command: "t", continueArgs: 1 },
+        ],
+      }),
+    );
+    expect(errors).toEqual(["harnessLauncher.customHarnesses[1].continueArgs must be a string"]);
+    expect(value.find((h) => h.id === "with")?.continueArgs).toBe("--last");
+    expect(value.find((h) => h.id === "typed")?.continueArgs).toBeUndefined();
   });
 
   test("a custom entry with a built-in id overrides it and keeps its enabled setting", () => {
@@ -109,6 +132,52 @@ describe("commandLineFor", () => {
     const r = commandLineFor(codex, "resume");
     expect(r.ok).toBe(false);
     expect(!r.ok && r.error).toStartWith("harnessLauncher.codex.resumeArgs: unterminated double quote");
+  });
+
+  test("continue uses continueArgs", () => {
+    expect(commandLineFor(codex, "continue")).toEqual({ ok: true, executable: "codex", args: ["resume", "--last"] });
+  });
+
+  test("a custom harness without continueArgs cannot continue", () => {
+    const custom = readHarnesses(reader({ customHarnesses: [{ id: "aider", command: "aider" }] })).value.at(-1);
+    if (custom === undefined) {
+      throw new Error("custom harness missing");
+    }
+    const r = commandLineFor(custom, "continue");
+    expect(r.ok).toBe(false);
+    expect(!r.ok && r.error).toContain("continueArgs is not set");
+  });
+});
+
+function offers(values: Record<string, unknown>): Record<string, boolean> {
+  return Object.fromEntries(readHarnesses(reader(values)).value.map((h) => [h.id, offersContinue(h)]));
+}
+
+describe("offersContinue", () => {
+  test("only when continue differs from new and resume", () => {
+    expect(offers({})).toEqual({ claude: true, codex: true, gemini: false, copilot: true, opencode: false });
+  });
+
+  test("matching resume or new, or no continueArgs, hides it", () => {
+    expect(
+      offers({
+        "claude.continueArgs": " --resume ",
+        "codex.continueArgs": "",
+        customHarnesses: [{ id: "aider", command: "aider" }],
+      }),
+    ).toMatchObject({ claude: false, codex: false, aider: false });
+  });
+
+  test("an unparsable continue line is offered so its error shows", () => {
+    expect(offers({ "claude.continueArgs": '"open' }).claude).toBe(true);
+  });
+});
+
+describe("readStatusBarEnabled", () => {
+  test("on unless explicitly false", () => {
+    expect(readStatusBarEnabled(reader({}))).toBe(true);
+    expect(readStatusBarEnabled(reader({ "statusBar.enabled": false }))).toBe(false);
+    expect(readStatusBarEnabled(reader({ "statusBar.enabled": "no" }))).toBe(true);
   });
 });
 

@@ -1,11 +1,11 @@
 import { homedir } from "node:os";
 import * as vscode from "vscode";
-import { restrictedKeys, type Harness } from "./config";
+import { readStatusBarEnabled, restrictedKeys, type Harness } from "./config";
 import type { CwdResolution } from "./cwd";
 import { createDetector, type Detection } from "./detect";
-import type { Action } from "./harnesses";
+import { ACTIONS, type Action } from "./harnesses";
 import { Launcher } from "./launcher";
-import { SECTION } from "./workspace";
+import { SECTION, settingsReader } from "./workspace";
 
 const PROBE_TIMEOUT_MS = 3000;
 
@@ -26,7 +26,30 @@ function isLaunchArgs(value: unknown): value is LaunchArgs {
     return false;
   }
   const v = value as Record<string, unknown>;
-  return typeof v["harness"] === "string" && (v["action"] === "new" || v["action"] === "resume");
+  return typeof v["harness"] === "string" && (ACTIONS as readonly unknown[]).includes(v["action"]);
+}
+
+/** Always-visible way in: the title bar button only shows while a file is open. */
+function createStatusBarButton(restricted: ReadonlySet<string>): vscode.Disposable {
+  const item = vscode.window.createStatusBarItem("harnessLauncher.status", vscode.StatusBarAlignment.Right, 100);
+  item.name = "Harness Launcher";
+  item.text = "$(rocket)";
+  item.tooltip = "Harness Launcher: start, continue or resume a session";
+  item.command = "harnessLauncher.open";
+  const sync = (): void => {
+    if (readStatusBarEnabled(settingsReader(restricted))) {
+      item.show();
+    } else {
+      item.hide();
+    }
+  };
+  sync();
+  const watcher = vscode.workspace.onDidChangeConfiguration((e) => {
+    if (e.affectsConfiguration(`${SECTION}.statusBar.enabled`)) {
+      sync();
+    }
+  });
+  return vscode.Disposable.from(item, watcher);
 }
 
 export function activate(context: vscode.ExtensionContext): HarnessLauncherApi {
@@ -46,7 +69,7 @@ export function activate(context: vscode.ExtensionContext): HarnessLauncherApi {
     vscode.commands.registerCommand("harnessLauncher.launch", (args: unknown) => {
       if (!isLaunchArgs(args)) {
         void vscode.window.showErrorMessage(
-          'Harness Launcher: harnessLauncher.launch needs args like { "harness": "claude", "action": "new" | "resume" }.',
+          'Harness Launcher: harnessLauncher.launch needs args like { "harness": "claude", "action": "new" | "continue" | "resume" }.',
         );
         return;
       }
@@ -54,6 +77,7 @@ export function activate(context: vscode.ExtensionContext): HarnessLauncherApi {
     }),
     vscode.commands.registerCommand("harnessLauncher.refresh", () => launcher.refresh()),
     vscode.commands.registerCommand("harnessLauncher.configure", () => launcher.configure()),
+    createStatusBarButton(restricted),
   );
 
   return {
