@@ -1,5 +1,7 @@
 # Harness Launcher
 
+<img src="media/harness-launcher.png" alt="Harness Launcher icon: a terracotta rocket on a dark tile" width="96" height="96">
+
 One button in the editor title bar starts or resumes an AI coding CLI (a "harness") in a terminal, **in exactly the folder you choose**. It lists only the CLIs actually installed on the machine: Claude Code, Codex, Gemini CLI, GitHub Copilot CLI, opencode, plus any you add.
 
 ![The launcher lists the detected harnesses and opens Claude Code in the hub folder of a multi-root workspace](media/demo.gif)

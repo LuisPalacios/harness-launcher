@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="128" height="128" viewBox="0 0 128 128">
+  <style>
+    .bg { fill: #1F1E1D; }
+    .star { fill: #F5F0E8; opacity: 0.55; }
+    .body { fill: #D97757; }
+    .shade { fill: #C4643F; }
+    .fin { fill: #B65535; }
+    .nozzle { fill: #8E4229; }
+    .ring { fill: #F5F0E8; }
+    .glass { fill: #1F1E1D; }
+    .flame { fill: #F2A97E; }
+    .core { fill: #FBE3C8; }
+  </style>
+  <rect class="bg" x="4" y="4" width="120" height="120" rx="26"/>
+  <circle class="star" cx="30" cy="28" r="2.5"/>
+  <circle class="star" cx="48" cy="18" r="1.5"/>
+  <circle class="star" cx="104" cy="98" r="2"/>
+  <circle class="star" cx="90" cy="110" r="1.5"/>
+  <g transform="matrix(0.868261, 0.868261, -0.868261, 0.868261, 67.806863, -50.944291)" style="">
+    <path class="flame" d="M57 97 C57 106 61 112 64 120 C67 112 71 106 71 97 Z"/>
+    <path class="core" d="M60.5 97 C60.5 103 62.5 107 64 112 C65.5 107 67.5 103 67.5 97 Z"/>
+    <path class="fin" d="M50 68 C40 72 36 80 36 94 L50 86 Z"/>
+    <path class="fin" d="M78 68 C88 72 92 80 92 94 L78 86 Z"/>
+    <path class="nozzle" d="M54 88 L74 88 L71 95 L57 95 Z"/>
+    <path class="body" d="M64 14 C70 24 79 40 79 62 L77 88 L51 88 L49 62 C49 40 58 24 64 14 Z"/>
+    <path class="shade" d="M64 14 C70 24 79 40 79 62 L77 88 L64 88 Z"/>
+    <circle class="ring" cx="64" cy="52" r="9"/>
+    <circle class="glass" cx="64" cy="52" r="5.5"/>
+  </g>
+</svg>

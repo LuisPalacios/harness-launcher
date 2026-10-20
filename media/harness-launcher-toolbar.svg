@@ -1,0 +1,28 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="30 29 69 69">
+  <!--
+    Editor title bar variant of harness-launcher.svg: the same rocket without
+    the tile and the stars, cropped to its bounds. Keep shapes and colors in
+    sync with harness-launcher.svg.
+  -->
+  <style>
+    .body { fill: #D97757; }
+    .shade { fill: #C4643F; }
+    .fin { fill: #B65535; }
+    .nozzle { fill: #8E4229; }
+    .ring { fill: #F5F0E8; }
+    .glass { fill: #1F1E1D; }
+    .flame { fill: #F2A97E; }
+    .core { fill: #FBE3C8; }
+  </style>
+  <g transform="translate(64 64) rotate(45) scale(0.85) translate(-64 -69)">
+    <path class="flame" d="M57 97 C57 106 61 112 64 120 C67 112 71 106 71 97 Z"/>
+    <path class="core" d="M60.5 97 C60.5 103 62.5 107 64 112 C65.5 107 67.5 103 67.5 97 Z"/>
+    <path class="fin" d="M50 68 C40 72 36 80 36 94 L50 86 Z"/>
+    <path class="fin" d="M78 68 C88 72 92 80 92 94 L78 86 Z"/>
+    <path class="nozzle" d="M54 88 L74 88 L71 95 L57 95 Z"/>
+    <path class="body" d="M64 14 C70 24 79 40 79 62 L77 88 L51 88 L49 62 C49 40 58 24 64 14 Z"/>
+    <path class="shade" d="M64 14 C70 24 79 40 79 62 L77 88 L64 88 Z"/>
+    <circle class="ring" cx="64" cy="52" r="9"/>
+    <circle class="glass" cx="64" cy="52" r="5.5"/>
+  </g>
+</svg>

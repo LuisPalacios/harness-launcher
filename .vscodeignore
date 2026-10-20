@@ -1,6 +1,7 @@
 **
 !dist/extension.js
-!media/icon.png
+!media/harness-launcher.png
+!media/harness-launcher-toolbar.svg
 !package.json
 !README.md
 !CHANGELOG.md

@@ -5,9 +5,9 @@
   "version": "0.1.0",
   "publisher": "luispa",
   "license": "MIT",
-  "icon": "media/icon.png",
+  "icon": "media/harness-launcher.png",
   "galleryBanner": {
-    "color": "#1B1F3B",
+    "color": "#1F1E1D",
     "theme": "dark"
   },
   "repository": {
@@ -70,7 +70,10 @@
         "command": "harnessLauncher.open",
         "title": "Open Launcher",
         "category": "Harness Launcher",
-        "icon": "$(rocket)"
+        "icon": {
+          "light": "media/harness-launcher-toolbar.svg",
+          "dark": "media/harness-launcher-toolbar.svg"
+        }
       },
       {
         "command": "harnessLauncher.launch",
