@@ -40,6 +40,22 @@ It is built for multi-root workspaces. Picture a hub folder holding a `.code-wor
 
 Every line shows the exact command and directory it uses. The terminal opens beside the current editor by default, with your normal shell profile, so your `PATH` and aliases apply.
 
+## Why I built it
+
+I work in VS Code with Claude Code running as a CLI in a terminal docked in the sidebar, instead of the extension's chat view. That way VS Code's own tools stay in the left panel (Explorer, Search, Source Control), and I still work with the harness the way I prefer: in its own terminal interface.
+
+The weak spot is getting back in. When I close VS Code by accident, or the CLI session ends, I have to open a terminal, move to the right folder (the hub, not whichever clone was active), and remember that harness's resume flag. Harness Launcher turns all of that into one click on **Resume session**, in the right folder, with the right arguments, for every harness I use.
+
+This is my setup in the user `settings.json`. Both settings belong to the Claude Code extension, which then runs the CLI in a terminal in the sidebar. Harness Launcher works the same with or without them.
+
+```jsonc
+{
+  // Claude Code extension: open Claude in the sidebar, as the CLI in a terminal
+  "claudeCode.preferredLocation": "sidebar",
+  "claudeCode.useTerminal": true
+}
+```
+
 ## Install
 
 Before you start, make sure you have:
