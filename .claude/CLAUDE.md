@@ -28,6 +28,7 @@ English is the only language of this repository: code, comments, docs, commit me
 - **Active voice**, direct phrasing, no AI filler ("Let's dive in", "In conclusion").
 - **Prose over tables** for concepts; tables only for settings references, CLI references or pure data.
 - No passive voice, no long paragraphs, no placeholder TODOs.
+- **README images are PNG or GIF.** `vsce package` rejects SVG images in `README.md` unless they come from an approved badge host. The centered header uses `media/harness-launcher.png`. Badges: shields.io retired its VS Marketplace badges, so those come from `vsmarketplacebadges.dev`; everything else uses shields.io or the GitHub Actions badge.
 
 ## Repository layout
 

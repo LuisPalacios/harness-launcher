@@ -1,6 +1,24 @@
-# Harness Launcher
+<p align="center">
+  <img src="media/harness-launcher.png" width="128" alt="Harness Launcher icon: a terracotta rocket on a dark tile">
+</p>
 
-<img src="media/harness-launcher.png" alt="Harness Launcher icon: a terracotta rocket on a dark tile" width="96" height="96">
+<h1 align="center">Harness Launcher</h1>
+
+<p align="center">
+  <strong>One button to start or resume any AI coding CLI, in exactly the folder you choose.</strong><br>
+  <em>A VS Code extension built for multi-root workspaces. It only lists the CLIs actually installed on the machine.</em>
+</p>
+
+<p align="center">
+  <a href="https://github.com/LuisPalacios/harness-launcher/actions/workflows/ci.yml"><img src="https://github.com/LuisPalacios/harness-launcher/actions/workflows/ci.yml/badge.svg" alt="CI" /></a>
+  <a href="https://marketplace.visualstudio.com/items?itemName=luispa.harness-launcher"><img src="https://vsmarketplacebadges.dev/version-short/luispa.harness-launcher.svg" alt="VS Marketplace version" /></a>
+  <a href="https://marketplace.visualstudio.com/items?itemName=luispa.harness-launcher"><img src="https://vsmarketplacebadges.dev/installs-short/luispa.harness-launcher.svg" alt="VS Marketplace installs" /></a>
+  <a href="https://open-vsx.org/extension/luispa/harness-launcher"><img src="https://img.shields.io/open-vsx/v/luispa/harness-launcher" alt="Open VSX version" /></a>
+  <a href="https://open-vsx.org/extension/luispa/harness-launcher"><img src="https://img.shields.io/open-vsx/dt/luispa/harness-launcher" alt="Open VSX downloads" /></a>
+  <a href="https://github.com/LuisPalacios/harness-launcher/releases/latest"><img src="https://img.shields.io/github/v/release/LuisPalacios/harness-launcher" alt="Latest release" /></a>
+  <a href="package.json"><img src="https://img.shields.io/badge/dynamic/json?url=https%3A%2F%2Fraw.githubusercontent.com%2FLuisPalacios%2Fharness-launcher%2Fmain%2Fpackage.json&query=%24.engines.vscode&label=VS%20Code" alt="Minimum VS Code version" /></a>
+  <a href="LICENSE"><img src="https://img.shields.io/github/license/LuisPalacios/harness-launcher" alt="MIT license" /></a>
+</p>
 
 One button in the editor title bar starts or resumes an AI coding CLI (a "harness") in a terminal, **in exactly the folder you choose**. It lists only the CLIs actually installed on the machine: Claude Code, Codex, Gemini CLI, GitHub Copilot CLI, opencode, plus any you add.
 
