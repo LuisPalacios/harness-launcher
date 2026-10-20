@@ -161,9 +161,11 @@ describe("probeVersion", () => {
   });
 
   if (win) {
+    // A cold powershell.exe start can pass Bun's 5 s default (seen on CI runners),
+    // so the test outlives probe()'s own 10 s timeout and that timeout decides.
     test("runs .ps1 files through PowerShell", async () => {
       expect(await probe("script")).toEqual({ ok: true, version: "ps-cli 4.5.6" });
-    });
+    }, 15_000);
   }
 });
 
