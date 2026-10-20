@@ -94,6 +94,10 @@ The extension activates after VS Code finishes starting, only to show its status
    - **Continue last session** jumps straight into the most recent session.
    - **Resume session** opens the CLI's own picker of past sessions.
 
+<p align="center">
+  <img src="media/harness-launcher-options.png" width="620" alt="The launcher list for a hub folder: New session, Continue last session and Resume session under Claude Code and under Codex, then Refresh detection and Configure">
+</p>
+
 Run **Harness Launcher: Open Launcher** from the Command Palette to do the same without the mouse.
 
 **Continue last session** appears only when the CLI has a separate way to do it. For Gemini CLI and opencode, **Resume session** already opens the latest session, so the launcher shows no duplicate item. To hide the status bar button, turn off `harnessLauncher.statusBar.enabled`.
