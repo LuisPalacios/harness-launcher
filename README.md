@@ -63,7 +63,7 @@ New sessions run the bare command. Change any command or argument from the Setti
 
 ## Settings
 
-Open **Harness Launcher: Configure** or search `@ext:luispalacios.harness-launcher` in Settings. Every setting below is editable in the Settings UI, except `customHarnesses`.
+Open **Harness Launcher: Configure** or search `@ext:luispa.harness-launcher` in Settings. Every setting below is editable in the Settings UI, except `customHarnesses`.
 
 | Setting                             | Default             | Description                                                                                                                           |
 | ----------------------------------- | ------------------- | ------------------------------------------------------------------------------------------------------------------------------------- |
