@@ -1,5 +1,11 @@
-# On a v* tag: check the tag against package.json, run CI, then create the
-# GitHub release with the .vsix and the matching CHANGELOG.md section.
+# On a v* tag: check the tag against package.json, run CI, publish the CI-built
+# .vsix to the Visual Studio Marketplace and Open VSX, then create the GitHub
+# release with the .vsix and the matching CHANGELOG.md section.
+#
+# The publish jobs run in the "release" environment. The Marketplace job signs in
+# with Microsoft Entra ID (an app registration federated with this environment)
+# because global Azure DevOps PATs stop working on 2026-12-01.
+# Secrets: AZURE_CLIENT_ID, AZURE_TENANT_ID, OVSX_PAT.
 name: Release
 
 on:
@@ -26,9 +32,49 @@ jobs:
     needs: verify-tag
     uses: ./.github/workflows/ci.yml
 
+  marketplace:
+    name: Visual Studio Marketplace
+    needs: ci
+    runs-on: ubuntu-latest
+    environment: release
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+      - uses: actions/download-artifact@v8
+        with:
+          name: vsix
+      - uses: azure/login@v3
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          allow-no-subscriptions: true
+      - run: npx --yes @vscode/vsce@4.0.0 publish --azure-credential --skip-duplicate --packagePath ./*.vsix
+
+  openvsx:
+    name: Open VSX
+    needs: ci
+    runs-on: ubuntu-latest
+    environment: release
+    # No id-token permission: ovsx would switch to trusted publishing when it
+    # finds an OIDC token, and this namespace publishes with a token.
+    steps:
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+      - uses: actions/download-artifact@v8
+        with:
+          name: vsix
+      - run: npx --yes ovsx@1.3.0 publish ./*.vsix --skip-duplicate -p "$OVSX_PAT"
+        env:
+          OVSX_PAT: ${{ secrets.OVSX_PAT }}
+
   github-release:
     name: GitHub release
-    needs: ci
+    needs: [marketplace, openvsx]
     runs-on: ubuntu-latest
     permissions:
       contents: write
