@@ -1,6 +1,6 @@
 // Keeps package.json settings in sync with src/harnesses.ts and the trust rules.
 import { describe, expect, test } from "bun:test";
-import { readFileSync } from "node:fs";
+import { existsSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import { CWD_MODES } from "../../src/cwd";
 import { DEFAULT_TERMINAL_LOCATION, ENABLED_VALUES, restrictedKeys, TERMINAL_LOCATIONS } from "../../src/config";
@@ -21,6 +21,9 @@ interface Manifest {
   readonly capabilities: { readonly untrustedWorkspaces: { readonly restrictedConfigurations: readonly string[] } };
   readonly contributes: {
     readonly commands: readonly { readonly command: string }[];
+    readonly icons: Readonly<
+      Record<string, { readonly default: { readonly fontPath: string; readonly fontCharacter: string } } | undefined>
+    >;
     readonly configuration: readonly { readonly properties: Readonly<Record<string, Property>> }[];
   };
 }
@@ -83,6 +86,17 @@ describe("package.json", () => {
   test("the status bar button is on by default and activation waits for startup to finish", () => {
     expect(prop("harnessLauncher.statusBar.enabled").default).toBe(true);
     expect(manifest.activationEvents).toEqual(["onStartupFinished"]);
+  });
+
+  test("the status bar icon font is contributed, packaged and used", () => {
+    const icon = manifest.contributes.icons["harness-launcher-rocket"];
+    expect(icon?.default.fontCharacter).toBe("\\E000");
+    const fontPath = icon?.default.fontPath ?? "";
+    expect(existsSync(join(import.meta.dir, "../..", fontPath))).toBe(true);
+    const ignore = readFileSync(join(import.meta.dir, "../../.vscodeignore"), "utf8").split("\n");
+    expect(ignore).toContain(`!${fontPath}`);
+    const source = readFileSync(join(import.meta.dir, "../../src/extension.ts"), "utf8");
+    expect(source).toContain('"$(harness-launcher-rocket)"');
   });
 
   test("every command the code registers is contributed", () => {

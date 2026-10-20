@@ -112,6 +112,15 @@
         }
       ]
     },
+    "icons": {
+      "harness-launcher-rocket": {
+        "description": "Harness Launcher rocket, used by the status bar button.",
+        "default": {
+          "fontPath": "media/harness-launcher-glyph.woff",
+          "fontCharacter": "\\E000"
+        }
+      }
+    },
     "configuration": [
       {
         "title": "General",

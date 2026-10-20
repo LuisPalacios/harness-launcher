@@ -2,6 +2,7 @@
 !dist/extension.js
 !media/harness-launcher.png
 !media/harness-launcher-toolbar.svg
+!media/harness-launcher-glyph.woff
 !package.json
 !README.md
 !CHANGELOG.md

@@ -33,7 +33,9 @@ function isLaunchArgs(value: unknown): value is LaunchArgs {
 function createStatusBarButton(restricted: ReadonlySet<string>): vscode.Disposable {
   const item = vscode.window.createStatusBarItem("harnessLauncher.status", vscode.StatusBarAlignment.Right, 100);
   item.name = "Harness Launcher";
-  item.text = "$(rocket)";
+  // The rocket of the title bar button as a font glyph (contributes.icons), since
+  // the status bar only draws single-color icons.
+  item.text = "$(harness-launcher-rocket)";
   item.tooltip = "Harness Launcher: start, continue or resume a session";
   item.command = "harnessLauncher.open";
   const sync = (): void => {
