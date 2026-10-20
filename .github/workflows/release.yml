@@ -1,0 +1,51 @@
+# On a v* tag: check the tag against package.json, run CI, then create the
+# GitHub release with the .vsix and the matching CHANGELOG.md section.
+name: Release
+
+on:
+  push:
+    tags: ["v*"]
+
+permissions:
+  contents: read
+
+jobs:
+  verify-tag:
+    name: Tag matches package.json
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - run: |
+          version=$(jq -r .version package.json)
+          if [ "$GITHUB_REF_NAME" != "v$version" ]; then
+            echo "::error::tag $GITHUB_REF_NAME does not match package.json version $version"
+            exit 1
+          fi
+
+  ci:
+    needs: verify-tag
+    uses: ./.github/workflows/ci.yml
+
+  github-release:
+    name: GitHub release
+    needs: ci
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/download-artifact@v8
+        with:
+          name: vsix
+      - name: Release notes from CHANGELOG.md
+        run: |
+          version="${GITHUB_REF_NAME#v}"
+          awk -v h="## [$version]" 'index($0, h) == 1 { f = 1; next } /^## |^\[/ { f = 0 } f' CHANGELOG.md > notes.md
+          if ! grep -q '[^[:space:]]' notes.md; then
+            echo "::error::CHANGELOG.md has no section for $version"
+            exit 1
+          fi
+      - name: Create the release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh release create "$GITHUB_REF_NAME" ./*.vsix --verify-tag --title "$GITHUB_REF_NAME" --notes-file notes.md

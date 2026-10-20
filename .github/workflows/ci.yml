@@ -1,0 +1,81 @@
+# Typecheck, lint, unit and integration tests, and packaging on Linux and
+# Windows. release.yml calls this workflow before it creates a release.
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_call:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    name: Build and test (${{ matrix.os }})
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.4.3
+      - run: bun install --frozen-lockfile
+      - run: bun run typecheck
+      - run: bun run lint
+      - run: bun run test
+      - name: Integration tests (Linux, virtual display)
+        if: runner.os == 'Linux'
+        run: xvfb-run -a bun run test:integration
+      - name: Integration tests
+        if: runner.os != 'Linux'
+        run: bun run test:integration
+      - run: bun run package
+      - name: Upload the .vsix
+        if: runner.os == 'Linux'
+        uses: actions/upload-artifact@v7
+        with:
+          name: vsix
+          path: "*.vsix"
+          if-no-files-found: error
+
+  commit-messages:
+    name: Commit messages
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+      - name: Run .githooks/commit-msg on every new commit
+        env:
+          EVENT: ${{ github.event_name }}
+          BASE: ${{ github.event.pull_request.base.sha }}
+          HEAD: ${{ github.event.pull_request.head.sha }}
+          BEFORE: ${{ github.event.before }}
+        run: |
+          set -euo pipefail
+          if [ "$EVENT" = pull_request ]; then
+            range="$BASE..$HEAD"
+          elif [ -n "$BEFORE" ] && git cat-file -e "$BEFORE^{commit}" 2>/dev/null; then
+            range="$BEFORE..$GITHUB_SHA"
+          else
+            # First push, force push or tag: check the whole history.
+            range="$GITHUB_SHA"
+          fi
+          msg=$(mktemp)
+          status=0
+          for sha in $(git rev-list "$range"); do
+            git log -1 --format=%B "$sha" > "$msg"
+            if ! bash .githooks/commit-msg "$msg"; then
+              echo "::error::commit $sha has a forbidden commit message"
+              status=1
+            fi
+          done
+          exit "$status"
