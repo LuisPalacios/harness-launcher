@@ -4,6 +4,7 @@ import {
   offersContinue,
   readCwdSettings,
   readHarnesses,
+  readQuickLaunch,
   readStatusBarEnabled,
   readTerminalLocation,
   restrictedKeys,
@@ -178,6 +179,17 @@ describe("readStatusBarEnabled", () => {
     expect(readStatusBarEnabled(reader({}))).toBe(true);
     expect(readStatusBarEnabled(reader({ "statusBar.enabled": false }))).toBe(false);
     expect(readStatusBarEnabled(reader({ "statusBar.enabled": "no" }))).toBe(true);
+  });
+});
+
+describe("readQuickLaunch", () => {
+  test("a harness id, or undefined for none and invalid values", () => {
+    expect(readQuickLaunch(reader({}))).toBeUndefined();
+    expect(readQuickLaunch(reader({ "quickLaunch.harness": "none" }))).toBeUndefined();
+    expect(readQuickLaunch(reader({ "quickLaunch.harness": "claude" }))).toBe("claude");
+    expect(readQuickLaunch(reader({ "quickLaunch.harness": "my-cli" }))).toBe("my-cli");
+    expect(readQuickLaunch(reader({ "quickLaunch.harness": "" }))).toBeUndefined();
+    expect(readQuickLaunch(reader({ "quickLaunch.harness": 1 }))).toBeUndefined();
   });
 });
 

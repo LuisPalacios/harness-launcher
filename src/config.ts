@@ -220,6 +220,14 @@ export function readStatusBarEnabled(read: SettingsReader): boolean {
   return read("statusBar.enabled") !== false;
 }
 
+export const QUICK_LAUNCH_NONE = "none";
+
+/** The harness id a double click on a rocket button starts, or undefined for none. */
+export function readQuickLaunch(read: SettingsReader): string | undefined {
+  const value = read("quickLaunch.harness");
+  return typeof value === "string" && value !== QUICK_LAUNCH_NONE && ID_PATTERN.test(value) ? value : undefined;
+}
+
 export function readCwdSettings(read: SettingsReader): Settings<CwdSettings> {
   const errors: string[] = [];
   const mode = read("cwd.mode") ?? "workspaceFile";

@@ -1,6 +1,6 @@
 import { homedir } from "node:os";
 import * as vscode from "vscode";
-import { readStatusBarEnabled, restrictedKeys, type Harness } from "./config";
+import { readHarnesses, readQuickLaunch, readStatusBarEnabled, restrictedKeys, type Harness } from "./config";
 import type { CwdResolution } from "./cwd";
 import { createDetector, type Detection } from "./detect";
 import { ACTIONS, type Action } from "./harnesses";
@@ -36,10 +36,15 @@ function createStatusBarButton(restricted: ReadonlySet<string>): vscode.Disposab
   // The rocket of the title bar button as a font glyph (contributes.icons), since
   // the status bar only draws single-color icons.
   item.text = "$(harness-launcher-rocket)";
-  item.tooltip = "Harness Launcher: start, continue or resume a session";
-  item.command = "harnessLauncher.open";
+  item.command = "harnessLauncher.click";
   const sync = (): void => {
-    if (readStatusBarEnabled(settingsReader(restricted))) {
+    const read = settingsReader(restricted);
+    const quick = readQuickLaunch(read);
+    const label = readHarnesses(read).value.find((h) => h.id === quick)?.label;
+    item.tooltip =
+      "Harness Launcher: start, continue or resume a session" +
+      (label === undefined ? "" : `\nDouble-click: new ${label} session`);
+    if (readStatusBarEnabled(read)) {
       item.show();
     } else {
       item.hide();
@@ -47,7 +52,7 @@ function createStatusBarButton(restricted: ReadonlySet<string>): vscode.Disposab
   };
   sync();
   const watcher = vscode.workspace.onDidChangeConfiguration((e) => {
-    if (e.affectsConfiguration(`${SECTION}.statusBar.enabled`)) {
+    if (e.affectsConfiguration(SECTION)) {
       sync();
     }
   });
@@ -68,6 +73,7 @@ export function activate(context: vscode.ExtensionContext): HarnessLauncherApi {
   context.subscriptions.push(
     log,
     vscode.commands.registerCommand("harnessLauncher.open", () => launcher.open()),
+    vscode.commands.registerCommand("harnessLauncher.click", () => launcher.click()),
     vscode.commands.registerCommand("harnessLauncher.launch", (args: unknown) => {
       if (!isLaunchArgs(args)) {
         void vscode.window.showErrorMessage(

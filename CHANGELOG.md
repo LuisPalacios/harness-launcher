@@ -2,6 +2,16 @@
 
 All notable changes to this extension are documented here. The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and the project uses [Semantic Versioning](https://semver.org/).
 
+## [Unreleased]
+
+### Added
+
+- `harnessLauncher.quickLaunch.harness`: double-click a rocket button, in the editor tab row or the status bar, to start a **New session** of the chosen harness without the list. A single click still opens the launcher.
+
+### Fixed
+
+- Claude Code, or any CLI, sometimes did not show up on macOS until VS Code restarted. A failed detection is no longer cached for the session, so the next launcher run checks again, and on macOS and Linux a command missing from `PATH` is also looked up in `~/.local/bin`, `/opt/homebrew/bin` and `/usr/local/bin`. The log now prints the `PATH` the extension sees when a harness is not found.
+
 ## [0.2.0] - 2026-10-20
 
 ### Added

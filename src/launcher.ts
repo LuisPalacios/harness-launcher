@@ -1,10 +1,12 @@
 // Command handlers: the quick pick, launching a harness and the cwd prompt.
 import * as vscode from "vscode";
+import { ClickTracker } from "./click";
 import {
   commandLineFor,
   offersContinue,
   readCwdSettings,
   readHarnesses,
+  readQuickLaunch,
   readTerminalLocation,
   type Harness,
   type SettingsReader,
@@ -31,6 +33,8 @@ function settingsQuery(harness: Harness): string {
 
 export class Launcher {
   private readonly notices: Notices;
+  private readonly clicks = new ClickTracker();
+  private loggedPath: string | undefined;
 
   constructor(
     private readonly detector: Detector,
@@ -89,6 +93,37 @@ export class Launcher {
     picker.items = [...items, ...this.footer()];
     picker.placeholder = "Start or resume a session";
     picker.busy = false;
+  }
+
+  /**
+   * A click on a rocket button. With a quick launch harness set, a double click
+   * starts its New session and a single click opens the launcher after the
+   * double-click window; without one, the launcher opens at once.
+   */
+  click(): void {
+    const quick = readQuickLaunch(this.settings());
+    if (quick === undefined) {
+      void this.open();
+      return;
+    }
+    this.clicks.click(
+      () => void this.open(),
+      () => void this.quickLaunch(quick),
+    );
+  }
+
+  private async quickLaunch(harnessId: string): Promise<void> {
+    const harness = this.currentHarnesses().find((h) => h.id === harnessId);
+    if (harness?.enabled === "auto") {
+      const detection = await this.detector.detect(harness.command);
+      if (!detection.found) {
+        this.log.info(`quick launch ${harness.id}: not detected: ${detection.reason}`);
+        void vscode.window.showWarningMessage(`Harness Launcher: ${harness.label} is not detected, so double-click cannot start it.`);
+        await this.open();
+        return;
+      }
+    }
+    await this.launch(harnessId, "new");
   }
 
   async launch(harnessId: string, action: Action): Promise<void> {
@@ -173,6 +208,12 @@ export class Launcher {
         `detect ${h.id} (${h.command}): ${d?.found ? `found ${d.path} "${d.version}"` : `not found${d?.path ? ` at ${d.path}` : ""}: ${d?.reason}`}`,
       );
     });
+    // The PATH VS Code handed to the extension host explains most "not on PATH" reports.
+    const path = process.env["PATH"] ?? "(unset)";
+    if (detections.some((d) => !d.found) && path !== this.loggedPath) {
+      this.loggedPath = path;
+      this.log.info(`detect: PATH is ${path}`);
+    }
     const cwd = this.currentCwd();
     const where = cwd.kind === "pick" ? "choose folder" : cwd.path;
 

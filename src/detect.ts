@@ -1,7 +1,7 @@
-// Harness detection: resolve a command against PATH (PATHEXT on Windows), then
-// prove it runs with a `--version` probe. Found-on-PATH is not proof: a shim
-// can print "not installed" and still exit 0, so the probe also requires a
-// version number in stdout.
+// Harness detection: resolve a command against PATH (PATHEXT on Windows) and the
+// usual install folders, then prove it runs with a `--version` probe. Found-on-PATH
+// is not proof: a shim can print "not installed" and still exit 0, so the probe
+// also requires a version number in stdout.
 import { spawn, type ChildProcess } from "node:child_process";
 import { accessSync, constants, statSync } from "node:fs";
 import * as nodePath from "node:path";
@@ -16,6 +16,13 @@ export interface ResolveOptions {
 const WINDOWS_RUNNABLE = [".com", ".exe", ".bat", ".cmd", ".ps1"];
 
 export const VERSION_PATTERN = /\d+\.\d+(?:\.\d+)?/;
+
+/**
+ * Searched after PATH on macOS and Linux. VS Code started from the Dock or a
+ * desktop launcher can miss PATH entries that only the shell profile adds, while
+ * native installers (Claude Code's goes to ~/.local/bin) and Homebrew use these.
+ */
+export const FALLBACK_DIRS = ["~/.local/bin", "/opt/homebrew/bin", "/usr/local/bin"] as const;
 
 export function windowsExtensions(pathext: string | undefined): string[] {
   const listed = (pathext ?? ".COM;.EXE;.BAT;.CMD")
@@ -42,7 +49,8 @@ function getEnv(env: NodeJS.ProcessEnv, name: string, platform: NodeJS.Platform)
 /**
  * Returns the absolute path that `command` runs, or undefined. Absolute paths
  * (and `~/…`) skip the search. Relative paths with a separator and relative
- * PATH entries are ignored, so a workspace cannot plant an executable.
+ * PATH entries are ignored, so a workspace cannot plant an executable. Outside
+ * Windows, FALLBACK_DIRS are searched after PATH.
  */
 export function resolveExecutable(command: string, opts: ResolveOptions): string | undefined {
   const win = opts.platform === "win32";
@@ -63,7 +71,11 @@ export function resolveExecutable(command: string, opts: ResolveOptions): string
     return undefined;
   }
 
-  for (const entry of (getEnv(opts.env, "PATH", opts.platform) ?? "").split(path.delimiter)) {
+  const entries = (getEnv(opts.env, "PATH", opts.platform) ?? "").split(path.delimiter);
+  if (!win) {
+    entries.push(...FALLBACK_DIRS.map((d) => d.replace(/^~/, opts.home)));
+  }
+  for (const entry of entries) {
     const dir = win ? entry.trim().replace(/^"(.*)"$/, "$1") : entry;
     if (dir === "" || !path.isAbsolute(dir)) {
       continue;
@@ -242,18 +254,28 @@ export interface DetectorDeps {
   readonly probe: (resolved: string) => Promise<ProbeResult>;
 }
 
-/** Caches one detection per command string for the session. */
+/**
+ * Caches one successful detection per command string for the session. A failure
+ * is not cached, so the next launcher run checks again instead of hiding the
+ * harness until Refresh or a restart.
+ */
 export class Detector {
   private readonly cache = new Map<string, Promise<Detection>>();
 
   constructor(private readonly deps: DetectorDeps) {}
 
   detect(command: string): Promise<Detection> {
-    let pending = this.cache.get(command);
-    if (pending === undefined) {
-      pending = this.run(command);
-      this.cache.set(command, pending);
+    const cached = this.cache.get(command);
+    if (cached !== undefined) {
+      return cached;
     }
+    const pending = this.run(command);
+    this.cache.set(command, pending);
+    void pending.then((d) => {
+      if (!d.found && this.cache.get(command) === pending) {
+        this.cache.delete(command);
+      }
+    });
     return pending;
   }
 

@@ -48,6 +48,7 @@
       "restrictedConfigurations": [
         "harnessLauncher.customHarnesses",
         "harnessLauncher.cwd.path",
+        "harnessLauncher.quickLaunch.harness",
         "harnessLauncher.claude.command",
         "harnessLauncher.claude.newArgs",
         "harnessLauncher.claude.continueArgs",
@@ -76,6 +77,11 @@
       {
         "command": "harnessLauncher.open",
         "title": "Open Launcher",
+        "category": "Harness Launcher"
+      },
+      {
+        "command": "harnessLauncher.click",
+        "title": "Open Launcher",
         "category": "Harness Launcher",
         "icon": {
           "light": "media/harness-launcher-toolbar.svg",
@@ -101,11 +107,15 @@
     "menus": {
       "editor/title": [
         {
-          "command": "harnessLauncher.open",
+          "command": "harnessLauncher.click",
           "group": "navigation"
         }
       ],
       "commandPalette": [
+        {
+          "command": "harnessLauncher.click",
+          "when": "false"
+        },
         {
           "command": "harnessLauncher.launch",
           "when": "false"
@@ -185,6 +195,28 @@
             "markdownDescription": "Show a rocket button in the status bar that opens the launcher. Unlike the editor title button, it stays visible with no file open.",
             "order": 5
           },
+          "harnessLauncher.quickLaunch.harness": {
+            "type": "string",
+            "default": "none",
+            "enum": [
+              "none",
+              "claude",
+              "codex",
+              "gemini",
+              "copilot",
+              "opencode"
+            ],
+            "enumDescriptions": [
+              "Double-click works like a single click: it opens the launcher.",
+              "Claude Code.",
+              "Codex.",
+              "Gemini CLI.",
+              "GitHub Copilot.",
+              "opencode."
+            ],
+            "markdownDescription": "Harness whose **New session** starts when you double-click a rocket button, in the editor tab row or in the status bar. A single click still opens the launcher, a moment later so a second click can arrive. When the harness is not detected, a double-click opens the launcher instead. A custom harness counts when its `id` replaces a built-in one.",
+            "order": 6
+          },
           "harnessLauncher.customHarnesses": {
             "type": "array",
             "default": [],
@@ -225,7 +257,7 @@
               }
             },
             "scope": "machine-overridable",
-            "order": 6
+            "order": 7
           }
         }
       },
