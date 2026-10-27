@@ -100,6 +100,8 @@ The extension activates after VS Code finishes starting, only to show its status
 
 Run **Harness Launcher: Open Launcher** from the Command Palette to do the same without the mouse.
 
+To skip the list for the harness I use most, I pick it in `harnessLauncher.quickLaunch.harness`. A double-click on either rocket then starts a **New session** of that harness straight away. A single click still opens the list, a moment later, so a second click has time to arrive.
+
 **Continue last session** appears only when the CLI has a separate way to do it. For Gemini CLI and opencode, **Resume session** already opens the latest session, so the launcher shows no duplicate item. To hide the status bar button, turn off `harnessLauncher.statusBar.enabled`.
 
 To bind a key directly to one action, add this to `keybindings.json`:
@@ -126,25 +128,26 @@ To bind a key directly to one action, add this to `keybindings.json`:
 
 New sessions run the bare command. Change any command or argument from the Settings UI.
 
-**Detection.** A harness shows up only when its command is on `PATH` **and** `<command> --version` prints a version number within 3 seconds. Being found on `PATH` is not enough: some editors install a stub named after a CLI that prints "not installed" and exits successfully. To list a harness anyway, set its **Enabled** setting to `always`. After installing a CLI, click **Refresh detection**.
+**Detection.** A harness shows up only when its command is on `PATH` **and** `<command> --version` prints a version number within 3 seconds. Being found on `PATH` is not enough: some editors install a stub named after a CLI that prints "not installed" and exits successfully. On macOS and Linux, a command missing from `PATH` is also looked up in `~/.local/bin`, `/opt/homebrew/bin` and `/usr/local/bin`, because VS Code started from the Dock or a desktop launcher can miss folders that only the shell profile adds. To list a harness anyway, set its **Enabled** setting to `always`. A harness that was not found is checked again every time the launcher opens; after updating a CLI that was found, click **Refresh detection**.
 
 ## Settings
 
 Open **Harness Launcher: Configure** or search `@ext:luispa.harness-launcher` in Settings. Every setting below is editable in the Settings UI, except `customHarnesses`.
 
-| Setting                             | Default             | Description                                                                                                                           |
-| ----------------------------------- | ------------------- | ------------------------------------------------------------------------------------------------------------------------------------- |
-| `harnessLauncher.cwd.mode`          | `workspaceFile`     | Where the terminal starts. See [Working directory](#working-directory).                                                               |
-| `harnessLauncher.cwd.folderName`    | `""`                | Folder for `namedFolder` mode: the name the Explorer shows, not the folder name on disk.                                              |
-| `harnessLauncher.cwd.path`          | `""`                | Absolute path for `path` mode. Supports `~`, `${userHome}`, `${workspaceFileDir}`, `${workspaceFolder}`, `${workspaceFolder:<name>}`. |
-| `harnessLauncher.terminal.location` | `editorBeside`      | `editorBeside`, `editor` or `panel`.                                                                                                  |
-| `harnessLauncher.statusBar.enabled` | `true`              | Show the rocket button in the status bar.                                                                                             |
-| `harnessLauncher.<id>.enabled`      | `auto`              | `auto` (when detected), `always` or `never`.                                                                                          |
-| `harnessLauncher.<id>.command`      | the CLI name        | Executable name on `PATH`, or an absolute path.                                                                                       |
-| `harnessLauncher.<id>.newArgs`      | `""`                | Arguments for **New session**.                                                                                                        |
-| `harnessLauncher.<id>.continueArgs` | see the table above | Arguments for **Continue last session**. The item is hidden when they match New or Resume.                                            |
-| `harnessLauncher.<id>.resumeArgs`   | see the table above | Arguments for **Resume session**.                                                                                                     |
-| `harnessLauncher.customHarnesses`   | `[]`                | Extra harnesses, edited in `settings.json`.                                                                                           |
+| Setting                               | Default             | Description                                                                                                                           |
+| ------------------------------------- | ------------------- | ------------------------------------------------------------------------------------------------------------------------------------- |
+| `harnessLauncher.cwd.mode`            | `workspaceFile`     | Where the terminal starts. See [Working directory](#working-directory).                                                               |
+| `harnessLauncher.cwd.folderName`      | `""`                | Folder for `namedFolder` mode: the name the Explorer shows, not the folder name on disk.                                              |
+| `harnessLauncher.cwd.path`            | `""`                | Absolute path for `path` mode. Supports `~`, `${userHome}`, `${workspaceFileDir}`, `${workspaceFolder}`, `${workspaceFolder:<name>}`. |
+| `harnessLauncher.terminal.location`   | `editorBeside`      | `editorBeside`, `editor` or `panel`.                                                                                                  |
+| `harnessLauncher.statusBar.enabled`   | `true`              | Show the rocket button in the status bar.                                                                                             |
+| `harnessLauncher.quickLaunch.harness` | `none`              | Harness whose **New session** starts on a double-click of a rocket button.                                                            |
+| `harnessLauncher.<id>.enabled`        | `auto`              | `auto` (when detected), `always` or `never`.                                                                                          |
+| `harnessLauncher.<id>.command`        | the CLI name        | Executable name on `PATH`, or an absolute path.                                                                                       |
+| `harnessLauncher.<id>.newArgs`        | `""`                | Arguments for **New session**.                                                                                                        |
+| `harnessLauncher.<id>.continueArgs`   | see the table above | Arguments for **Continue last session**. The item is hidden when they match New or Resume.                                            |
+| `harnessLauncher.<id>.resumeArgs`     | see the table above | Arguments for **Resume session**.                                                                                                     |
+| `harnessLauncher.customHarnesses`     | `[]`                | Extra harnesses, edited in `settings.json`.                                                                                           |
 
 Arguments are one string, split like a shell would: separate them with spaces and group with `"double"` or `'single'` quotes. The launcher passes each argument quoted, never as raw shell text.
 
@@ -199,8 +202,8 @@ A repository could set `command` or arguments in its own `.vscode/settings.json`
 ## Troubleshooting
 
 - **The button is missing.** The status bar rocket is always there unless `harnessLauncher.statusBar.enabled` is off. The tab row rocket only shows when a file is open.
-- **A CLI is not detected.** Open **View → Output** and select **Harness Launcher**. The log shows each detection, the path it resolved and why it was rejected.
-- **A CLI installed after VS Code started is not found.** The extension sees the `PATH` VS Code started with. Restart VS Code, then click **Refresh detection**.
+- **A CLI is not detected.** Open **View → Output** and select **Harness Launcher**. The log shows each detection, the path it resolved, why it was rejected and the `PATH` the extension sees.
+- **A CLI installed after VS Code started is not found.** The extension sees the `PATH` VS Code started with, plus the folders listed under [Detection](#built-in-harnesses). If the CLI lives elsewhere, set its `command` to the absolute path, or restart VS Code.
 - **A `.ps1` command is not detected on Windows.** The probe runs `powershell.exe`, so the PowerShell execution policy applies. Set the harness to `always`, or point `command` at the `.exe`.
 
 ## Remote and containers

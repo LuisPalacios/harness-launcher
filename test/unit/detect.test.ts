@@ -4,6 +4,7 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import {
   Detector,
+  FALLBACK_DIRS,
   probeSpec,
   probeVersion,
   resolveExecutable,
@@ -102,6 +103,18 @@ describe("resolveExecutable", () => {
     expect(resolveExecutable(win ? "~\\bin\\good.cmd" : "~/bin/good", opts(""))).toBe(join(bin, win ? "good.cmd" : "good"));
   });
 
+  if (!win) {
+    test("searches the usual install folders after PATH", () => {
+      expect(FALLBACK_DIRS).toContain("~/.local/bin");
+      const local = join(root, ".local", "bin");
+      mkdirSync(local, { recursive: true });
+      writeFileSync(join(local, "native"), scripts["good"] ?? "");
+      chmodSync(join(local, "native"), 0o755);
+      expect(resolveExecutable("native", opts(""))).toBe(join(local, "native"));
+      expect(resolveExecutable("good", opts(bin))).toBe(join(bin, "good"));
+    });
+  }
+
   test("never searches a relative path with a separator", () => {
     expect(resolveExecutable(win ? "bin\\good" : "bin/good", opts(bin))).toBeUndefined();
   });
@@ -186,6 +199,19 @@ describe("Detector", () => {
     await detector.detect("tool");
     expect(probes).toBe(2);
     expect(await detector.detect("absent")).toEqual({ found: false, reason: '"absent" is not on PATH' });
+  });
+
+  test("retries a failed detection on the next call", async () => {
+    let installed = false;
+    const detector = new Detector({
+      resolve: (command) => (installed ? `/bin/${command}` : undefined),
+      probe: async () => ({ ok: true, version: "x 1.0" }),
+    });
+    const [first, concurrent] = await Promise.all([detector.detect("late"), detector.detect("late")]);
+    expect(first.found).toBe(false);
+    expect(concurrent).toBe(first);
+    installed = true;
+    expect(await detector.detect("late")).toEqual({ found: true, path: "/bin/late", version: "x 1.0" });
   });
 
   test("a failed probe keeps the resolved path for diagnostics", async () => {

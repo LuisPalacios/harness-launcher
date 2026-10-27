@@ -3,7 +3,13 @@ import { describe, expect, test } from "bun:test";
 import { existsSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import { CWD_MODES } from "../../src/cwd";
-import { DEFAULT_TERMINAL_LOCATION, ENABLED_VALUES, restrictedKeys, TERMINAL_LOCATIONS } from "../../src/config";
+import {
+  DEFAULT_TERMINAL_LOCATION,
+  ENABLED_VALUES,
+  QUICK_LAUNCH_NONE,
+  restrictedKeys,
+  TERMINAL_LOCATIONS,
+} from "../../src/config";
 import { BUILTIN_HARNESSES } from "../../src/harnesses";
 
 interface Property {
@@ -60,6 +66,7 @@ describe("package.json", () => {
   test("execution-deciding settings are restricted in untrusted workspaces", () => {
     expect(restricted).toContain("harnessLauncher.customHarnesses");
     expect(restricted).toContain("harnessLauncher.cwd.path");
+    expect(restricted).toContain("harnessLauncher.quickLaunch.harness");
     for (const key of restricted) {
       prop(key);
     }
@@ -75,6 +82,8 @@ describe("package.json", () => {
     expect(prop("harnessLauncher.cwd.mode").enum).toEqual([...CWD_MODES]);
     expect(prop("harnessLauncher.terminal.location").enum).toEqual([...TERMINAL_LOCATIONS]);
     expect(prop("harnessLauncher.terminal.location").default).toBe(DEFAULT_TERMINAL_LOCATION);
+    expect(prop("harnessLauncher.quickLaunch.harness").enum).toEqual([QUICK_LAUNCH_NONE, ...BUILTIN_HARNESSES.map((h) => h.id)]);
+    expect(prop("harnessLauncher.quickLaunch.harness").default).toBe(QUICK_LAUNCH_NONE);
     for (const [key, p] of Object.entries(properties)) {
       expect(p.markdownDescription, key).toBeString();
       if (p.enum !== undefined) {
