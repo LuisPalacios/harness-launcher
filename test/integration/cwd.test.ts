@@ -175,6 +175,28 @@ describe("harness settings and commands", () => {
     await vscode.commands.executeCommand("workbench.action.closeAllGroups");
   });
 
+  it("launch beside reuses an empty group that is not the active one", async () => {
+    await vscode.commands.executeCommand("workbench.action.closeAllGroups");
+    await vscode.window.showTextDocument(await vscode.workspace.openTextDocument({ content: "code" }));
+    await vscode.commands.executeCommand("workbench.action.newGroupLeft");
+    await vscode.commands.executeCommand("workbench.action.focusRightGroup");
+    const empty = vscode.window.tabGroups.all.find((g) => g.tabs.length === 0);
+    assert.ok(empty !== undefined && !empty.isActive, "an empty group sits beside the active one");
+    await set({ customHarnesses: [{ id: "probe", label: "Reuse Probe", command: "node", newArgs: "--version" }] }, Global);
+    const opened = new Promise<vscode.Terminal>((done) => {
+      const listener = vscode.window.onDidOpenTerminal((t) => {
+        listener.dispose();
+        done(t);
+      });
+    });
+    await vscode.commands.executeCommand("harnessLauncher.launch", { harness: "probe", action: "new" });
+    await opened;
+    const groups = vscode.window.tabGroups.all;
+    assert.equal(groups.length, 2, "no third group");
+    assert.ok(groups.find((g) => g.viewColumn === empty.viewColumn)?.tabs.some((t) => t.label === "Reuse Probe"));
+    await vscode.commands.executeCommand("workbench.action.closeAllGroups");
+  });
+
   it("launch accepts the continue action from a key binding", async () => {
     await set({ customHarnesses: [{ id: "probe", label: "Continue Probe", command: "node", continueArgs: "--version" }] }, Global);
     const opened = new Promise<vscode.Terminal>((done) => {

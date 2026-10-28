@@ -194,7 +194,7 @@
             "enumDescriptions": [
               "Terminal panel.",
               "Editor area, as a tab in the active group.",
-              "Editor area, in a group beside the active editor, or in the active group when it is empty."
+              "Editor area, in a group beside the active editor, or in an empty group when there is one."
             ],
             "markdownDescription": "Where the new terminal opens.",
             "order": 4

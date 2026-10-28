@@ -139,7 +139,7 @@ Open **Harness Launcher: Configure** or search `@ext:luispa.harness-launcher` in
 | `harnessLauncher.cwd.mode`            | `workspaceFile`     | Where the terminal starts. See [Working directory](#working-directory).                                                               |
 | `harnessLauncher.cwd.folderName`      | `""`                | Folder for `namedFolder` mode: the name the Explorer shows, not the folder name on disk.                                              |
 | `harnessLauncher.cwd.path`            | `""`                | Absolute path for `path` mode. Supports `~`, `${userHome}`, `${workspaceFileDir}`, `${workspaceFolder}`, `${workspaceFolder:<name>}`. |
-| `harnessLauncher.terminal.location`   | `editorBeside`      | `editorBeside` (the active group when it is empty), `editor` or `panel`.                                                              |
+| `harnessLauncher.terminal.location`   | `editorBeside`      | `editorBeside` (an empty group when there is one), `editor` or `panel`.                                                               |
 | `harnessLauncher.statusBar.enabled`   | `true`              | Show the rocket button in the status bar.                                                                                             |
 | `harnessLauncher.quickLaunch.harness` | `none`              | Harness whose **New session** starts on a double-click of a rocket button.                                                            |
 | `harnessLauncher.<id>.enabled`        | `auto`              | `auto` (when detected), `always` or `never`.                                                                                          |

@@ -7,7 +7,7 @@ All notable changes to this extension are documented here. The format follows [K
 ### Changed
 
 - **Set shortcut key** shows the key that `keybindings.json` already binds to Quick Launch, ready to keep or edit.
-- With `terminal.location` at `editorBeside`, an empty editor group, such as the one a window opens with, now takes the session instead of staying blank beside it.
+- With `terminal.location` at `editorBeside`, an empty editor group, such as the one a window opens with, now takes the session instead of staying blank beside it. The active group goes first, then any other empty group.
 
 ## [0.4.0] - 2026-10-28
 
