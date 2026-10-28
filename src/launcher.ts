@@ -15,7 +15,7 @@ import {
 import { resolveCwd, type CwdResolution } from "./cwd";
 import type { Detection, Detector } from "./detect";
 import type { Action } from "./harnesses";
-import { normalizeShortcut, withShortcut } from "./keybindings";
+import { currentShortcut, normalizeShortcut, withShortcut } from "./keybindings";
 import { displayCommandLine, isDirectory, launchInTerminal } from "./terminal";
 import { Notices, SECTION, settingsReader, workspaceSnapshot } from "./workspace";
 
@@ -53,6 +53,7 @@ export class Launcher {
     private readonly extensionId: string,
     private readonly log: vscode.LogOutputChannel,
     private readonly restricted: ReadonlySet<string>,
+    private readonly globalStorage: vscode.Uri,
   ) {
     this.notices = new Notices(log);
   }
@@ -146,6 +147,7 @@ export class Launcher {
       return;
     }
     const label = this.currentHarnesses().find((h) => h.id === quick)?.label ?? quick;
+    const current = typeof typed === "string" ? undefined : await this.currentQuickLaunchShortcut();
     const input =
       typeof typed === "string"
         ? typed
@@ -153,6 +155,7 @@ export class Launcher {
             title: "Harness Launcher: Quick Launch shortcut",
             prompt: `Keys that start a new ${label} session, also from a terminal. Type them as text, for example shift+alt+l or ctrl+k l.`,
             placeHolder: "shift+alt+l",
+            value: current,
             validateInput: (value) => {
               const key = normalizeShortcut(value);
               return key.ok ? undefined : key.error;
@@ -179,6 +182,28 @@ export class Launcher {
     }
     this.log.info(`shortcut ${key.value}: bound to ${QUICK_LAUNCH_COMMAND}${skip === undefined ? "" : ", added to terminal.integrated.commandsToSkipShell"}`);
     void vscode.window.showInformationMessage(`Harness Launcher: ${key.value} now starts a new ${label} session, also from a terminal.`);
+  }
+
+  /**
+   * The key keybindings.json binds to Quick Launch, if any. The file sits in the
+   * profile folder above the extension's global storage; a profile without its
+   * own key bindings uses the default profile's file.
+   */
+  async currentQuickLaunchShortcut(): Promise<string | undefined> {
+    const profile = vscode.Uri.joinPath(this.globalStorage, "..", "..");
+    const candidates = [vscode.Uri.joinPath(profile, "keybindings.json")];
+    if (profile.path.includes("/profiles/")) {
+      candidates.push(vscode.Uri.joinPath(profile, "..", "..", "keybindings.json"));
+    }
+    for (const uri of candidates) {
+      try {
+        const text = new TextDecoder().decode(await vscode.workspace.fs.readFile(uri));
+        return currentShortcut(text, QUICK_LAUNCH_COMMAND);
+      } catch {
+        // Not there; try the next one.
+      }
+    }
+    return undefined;
   }
 
   /**

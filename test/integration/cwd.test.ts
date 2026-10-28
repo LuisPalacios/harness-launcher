@@ -186,6 +186,7 @@ describe("harness settings and commands", () => {
     await vscode.commands.executeCommand("workbench.action.closeActiveEditor");
     const bound = [...text.matchAll(/"key": "([^"]+)",\s*"command": "harnessLauncher\.quickLaunch"/g)].map((m) => m[1]);
     assert.deepEqual(bound, ["ctrl+k l"]);
+    assert.equal(await api.quickLaunchShortcut(), "ctrl+k l", "the prompt starts from the bound key");
 
     const skip = vscode.workspace.getConfiguration("terminal.integrated").inspect("commandsToSkipShell")?.globalValue;
     assert.deepEqual(skip, ["-workbench.action.quickOpen", "harnessLauncher.quickLaunch"]);
