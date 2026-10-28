@@ -1,5 +1,5 @@
 import { describe, expect, test } from "bun:test";
-import { normalizeShortcut, withShortcut } from "../../src/keybindings";
+import { currentShortcut, normalizeShortcut, withShortcut } from "../../src/keybindings";
 
 const FORMAT = { insertSpaces: true, tabSize: 4, eol: "\n" };
 const CMD = "harnessLauncher.quickLaunch";
@@ -60,5 +60,26 @@ describe("withShortcut", () => {
   test("refuses a file that is not a list of key bindings", () => {
     expect(withShortcut("{}", CMD, "f5", FORMAT).ok).toBe(false);
     expect(withShortcut("[ { ", CMD, "f5", FORMAT).ok).toBe(false);
+  });
+});
+
+describe("currentShortcut", () => {
+  test("returns the last binding of the command and skips removals and other commands", () => {
+    const text = [
+      "// my key bindings",
+      "[",
+      `    { "key": "shift+alt+l", "command": "${CMD}" },`,
+      '    { "key": "ctrl+alt+r", "command": "harnessLauncher.launch" },',
+      `    { "key": "ctrl+k l", "command": "${CMD}" },`,
+      `    { "key": "ctrl+q", "command": "-${CMD}" },`,
+      "]",
+    ].join("\n");
+    expect(currentShortcut(text, CMD)).toBe("ctrl+k l");
+  });
+
+  test("returns undefined when nothing binds the command or the file is not a list", () => {
+    expect(currentShortcut("", CMD)).toBeUndefined();
+    expect(currentShortcut("[]", CMD)).toBeUndefined();
+    expect(currentShortcut('{ "key": "ctrl+q" }', CMD)).toBeUndefined();
   });
 });

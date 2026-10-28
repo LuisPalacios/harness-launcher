@@ -98,3 +98,16 @@ export function withShortcut(text: string, command: string, key: string, formatt
   next = applyEdits(next, modify(next, [-1], { key, command }, { formattingOptions: formatting, isArrayInsertion: true }));
   return { ok: true, value: next };
 }
+
+/** The key keybindings.json binds to `command`: its last binding wins, as in VS Code. */
+export function currentShortcut(text: string, command: string): string | undefined {
+  const root = parseTree(text, [], { allowTrailingComma: true });
+  if (root?.type !== "array") {
+    return undefined;
+  }
+  const keys = (root.children ?? []).flatMap((entry) => {
+    const key = entry.children?.find((p) => p.children?.[0]?.value === "key")?.children?.[1]?.value;
+    return entry.type === "object" && commandOf(entry) === command && typeof key === "string" ? [key] : [];
+  });
+  return keys.at(-1);
+}

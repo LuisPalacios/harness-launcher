@@ -14,6 +14,7 @@ export interface HarnessLauncherApi {
   harnesses(): Harness[];
   resolveCwd(): CwdResolution;
   detect(command: string): Promise<Detection>;
+  quickLaunchShortcut(): Promise<string | undefined>;
 }
 
 interface LaunchArgs {
@@ -68,7 +69,7 @@ export function activate(context: vscode.ExtensionContext): HarnessLauncherApi {
   });
   const log = vscode.window.createOutputChannel("Harness Launcher", { log: true });
   const restricted = restrictedKeys(context.extension.packageJSON, SECTION);
-  const launcher = new Launcher(detector, context.extension.id, log, restricted);
+  const launcher = new Launcher(detector, context.extension.id, log, restricted, context.globalStorageUri);
 
   context.subscriptions.push(
     log,
@@ -94,6 +95,7 @@ export function activate(context: vscode.ExtensionContext): HarnessLauncherApi {
     harnesses: () => launcher.currentHarnesses(),
     resolveCwd: () => launcher.currentCwd(),
     detect: (command) => detector.detect(command),
+    quickLaunchShortcut: () => launcher.currentQuickLaunchShortcut(),
   };
 }
 
