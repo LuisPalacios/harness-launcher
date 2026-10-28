@@ -8,6 +8,7 @@ import {
   readHarnesses,
   readQuickLaunch,
   readTerminalLocation,
+  withCommandSkippingShell,
   type Harness,
   type SettingsReader,
 } from "./config";
@@ -127,6 +128,25 @@ export class Launcher {
       return;
     }
     await this.quickLaunch(quick);
+  }
+
+  /**
+   * Lets the Quick Launch key binding through terminals, which otherwise send
+   * keys to the shell, then opens Keyboard Shortcuts on the command. There is
+   * no API to write `keybindings.json`, so the user records the keys.
+   */
+  async setUpQuickLaunchShortcut(): Promise<void> {
+    const command = `${SECTION}.quickLaunch`;
+    const terminal = vscode.workspace.getConfiguration("terminal.integrated");
+    const skip = withCommandSkippingShell(terminal.inspect("commandsToSkipShell")?.globalValue, command);
+    if (skip !== undefined) {
+      await terminal.update("commandsToSkipShell", skip, vscode.ConfigurationTarget.Global);
+      this.log.info(`shortcut setup: added ${command} to terminal.integrated.commandsToSkipShell`);
+    }
+    await vscode.commands.executeCommand("workbench.action.openGlobalKeybindings", command);
+    void vscode.window.showInformationMessage(
+      "Harness Launcher: double-click Harness Launcher: Quick Launch, press the keys you want, then Enter. The shortcut also works while a terminal has focus.",
+    );
   }
 
   private async quickLaunch(harnessId: string): Promise<void> {

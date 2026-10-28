@@ -7,6 +7,7 @@ All notable changes to this extension are documented here. The format follows [K
 ### Added
 
 - **Harness Launcher: Quick Launch** command (`harnessLauncher.quickLaunch`): starts a **New session** of the `quickLaunch.harness` harness, like a double-click on a rocket, so it can be bound to a key. With the setting at `none`, it warns that quick launch is not configured and offers to open the setting.
+- **Harness Launcher: Set Up Quick Launch Shortcut**, also linked under the setting: adds Quick Launch to `terminal.integrated.commandsToSkipShell`, so its shortcut works while a terminal has focus, and opens Keyboard Shortcuts on the command.
 
 ## [0.3.0] - 2026-10-27
 

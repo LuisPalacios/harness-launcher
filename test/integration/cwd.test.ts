@@ -171,6 +171,18 @@ describe("harness settings and commands", () => {
     assert.equal(terminal.name, "Continue Probe");
   });
 
+  it("the shortcut setup lets Quick Launch through terminals, once", async () => {
+    const terminal = vscode.workspace.getConfiguration("terminal.integrated");
+    await terminal.update("commandsToSkipShell", ["-workbench.action.quickOpen"], Global);
+    for (let i = 0; i < 2; i++) {
+      await vscode.commands.executeCommand("harnessLauncher.setUpQuickLaunchShortcut");
+    }
+    await vscode.commands.executeCommand("workbench.action.closeActiveEditor");
+    const skip = vscode.workspace.getConfiguration("terminal.integrated").inspect("commandsToSkipShell")?.globalValue;
+    assert.deepEqual(skip, ["-workbench.action.quickOpen", "harnessLauncher.quickLaunch"]);
+    await terminal.update("commandsToSkipShell", undefined, Global);
+  });
+
   it("open shows the quick pick without throwing", async () => {
     await vscode.commands.executeCommand("harnessLauncher.open");
     await vscode.commands.executeCommand("workbench.action.closeQuickOpen");
