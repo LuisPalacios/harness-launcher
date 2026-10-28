@@ -2,7 +2,7 @@
   "name": "harness-launcher",
   "displayName": "Harness Launcher",
   "description": "Start or resume an AI coding CLI in a terminal, in exactly the folder you want, with first-class multi-root support.",
-  "version": "0.3.0",
+  "version": "0.4.0",
   "publisher": "luispa",
   "license": "MIT",
   "icon": "media/harness-launcher.png",
