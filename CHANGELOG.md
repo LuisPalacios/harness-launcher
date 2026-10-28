@@ -2,6 +2,13 @@
 
 All notable changes to this extension are documented here. The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and the project uses [Semantic Versioning](https://semver.org/).
 
+## [Unreleased]
+
+### Added
+
+- **Harness Launcher: Quick Launch** command (`harnessLauncher.quickLaunch`): starts a **New session** of the `quickLaunch.harness` harness, like a double-click on a rocket, so it can be bound to a key. With the setting at `none`, it warns that quick launch is not configured and offers to open the setting.
+- **Set shortcut key** link under the setting, also **Harness Launcher: Set Quick Launch Shortcut Key**: asks for the keys, saves them in `keybindings.json` and adds Quick Launch to `terminal.integrated.commandsToSkipShell`, so the shortcut also works while a terminal has focus.
+
 ## [0.3.0] - 2026-10-27
 
 ### Added
@@ -39,6 +46,7 @@ First release.
 - Workspace Trust support: untrusted workspaces cannot change commands, arguments or paths.
 - **Harness Launcher** log output channel with detection results and launches.
 
+[Unreleased]: https://github.com/LuisPalacios/harness-launcher/compare/v0.3.0...HEAD
 [0.3.0]: https://github.com/LuisPalacios/harness-launcher/releases/tag/v0.3.0
 [0.2.0]: https://github.com/LuisPalacios/harness-launcher/releases/tag/v0.2.0
 [0.1.0]: https://github.com/LuisPalacios/harness-launcher/releases/tag/v0.1.0

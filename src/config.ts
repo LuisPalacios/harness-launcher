@@ -228,6 +228,16 @@ export function readQuickLaunch(read: SettingsReader): string | undefined {
   return typeof value === "string" && value !== QUICK_LAUNCH_NONE && ID_PATTERN.test(value) ? value : undefined;
 }
 
+/**
+ * The user's `terminal.integrated.commandsToSkipShell` with `command` added, so
+ * its key binding also works while a terminal has focus, or undefined when it
+ * is already listed. VS Code adds the list to its defaults, so it starts empty.
+ */
+export function withCommandSkippingShell(current: unknown, command: string): string[] | undefined {
+  const list = Array.isArray(current) ? current.filter((c): c is string => typeof c === "string") : [];
+  return list.includes(command) ? undefined : [...list, command];
+}
+
 export function readCwdSettings(read: SettingsReader): Settings<CwdSettings> {
   const errors: string[] = [];
   const mode = read("cwd.mode") ?? "workspaceFile";

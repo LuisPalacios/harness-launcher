@@ -89,6 +89,16 @@
         }
       },
       {
+        "command": "harnessLauncher.quickLaunch",
+        "title": "Quick Launch",
+        "category": "Harness Launcher"
+      },
+      {
+        "command": "harnessLauncher.setQuickLaunchShortcut",
+        "title": "Set Quick Launch Shortcut Key",
+        "category": "Harness Launcher"
+      },
+      {
         "command": "harnessLauncher.launch",
         "title": "Launch Harness",
         "category": "Harness Launcher"
@@ -214,7 +224,7 @@
               "GitHub Copilot.",
               "opencode."
             ],
-            "markdownDescription": "Harness whose **New session** starts when you double-click a rocket button, in the editor tab row or in the status bar. A single click still opens the launcher, a moment later so a second click can arrive. When the harness is not detected, a double-click opens the launcher instead. A custom harness counts when its `id` replaces a built-in one.",
+            "markdownDescription": "Harness whose **New session** starts when you double-click a rocket button, in the editor tab row or in the status bar, or press its shortcut key.\n\n[Set shortcut key](command:harnessLauncher.setQuickLaunchShortcut): asks for the keys, saves them in `keybindings.json` and lets them through terminals (`#terminal.integrated.commandsToSkipShell#`), which otherwise send every key to the CLI.\n\nA single click still opens the launcher, a moment later so a second click can arrive. When the harness is not detected, quick launch opens the launcher instead. A custom harness counts when its `id` replaces a built-in one.",
             "order": 6
           },
           "harnessLauncher.customHarnesses": {
@@ -516,6 +526,7 @@
     "@vscode/test-electron": "3.1.0",
     "@vscode/vsce": "4.0.0",
     "esbuild": "0.28.2",
+    "jsonc-parser": "3.3.1",
     "oxlint": "1.88.0",
     "typescript": "7.0.2"
   }

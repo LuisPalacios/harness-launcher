@@ -9,6 +9,7 @@ import {
   readTerminalLocation,
   restrictedKeys,
   trustAwareReader,
+  withCommandSkippingShell,
   type InspectedSetting,
   type SettingsReader,
 } from "../../src/config";
@@ -190,6 +191,16 @@ describe("readQuickLaunch", () => {
     expect(readQuickLaunch(reader({ "quickLaunch.harness": "my-cli" }))).toBe("my-cli");
     expect(readQuickLaunch(reader({ "quickLaunch.harness": "" }))).toBeUndefined();
     expect(readQuickLaunch(reader({ "quickLaunch.harness": 1 }))).toBeUndefined();
+  });
+});
+
+describe("withCommandSkippingShell", () => {
+  test("appends the command once and keeps the user's entries", () => {
+    expect(withCommandSkippingShell(undefined, "a.b")).toEqual(["a.b"]);
+    expect(withCommandSkippingShell(["-x.y", "z"], "a.b")).toEqual(["-x.y", "z", "a.b"]);
+    expect(withCommandSkippingShell(["z", "a.b"], "a.b")).toBeUndefined();
+    expect(withCommandSkippingShell("a.b", "a.b")).toEqual(["a.b"]);
+    expect(withCommandSkippingShell([1, "z"], "a.b")).toEqual(["z", "a.b"]);
   });
 });
 

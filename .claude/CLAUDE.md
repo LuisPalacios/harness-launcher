@@ -34,7 +34,7 @@ English is the only language of this repository: code, comments, docs, commit me
 
 Keep this section in sync with the real tree.
 
-- `src/`: extension source. Pure modules (argument parser, shell quoting, working-directory resolver, PATH resolver, harness table) never import `vscode`, so Bun can unit-test them. VS Code glue lives in separate files; `src/extension.ts` is the entry point.
+- `src/`: extension source. Pure modules (argument parser, shell quoting, working-directory resolver, PATH resolver, harness table, keybindings.json writer) never import `vscode`, so Bun can unit-test them. VS Code glue lives in separate files; `src/extension.ts` is the entry point.
 - `test/unit/`: Bun unit tests. `test/integration/`: `@vscode/test-cli` tests. `test/fixtures/`: a multi-root fixture workspace. Each test folder has its own `tsconfig.json` (Bun or Mocha globals).
 - `media/`: original artwork. `harness-launcher.svg` is the source of the Marketplace icon `harness-launcher.png` (256×256, `magick -background none -density 768 media/harness-launcher.svg -resize 256x256 -depth 8 PNG32:media/harness-launcher.png`). `harness-launcher-toolbar.svg` is the editor title bar button, the same rocket without the tile; keep both SVGs in sync. `harness-launcher-glyph.woff` is the status bar icon: the toolbar rocket as a one-color font glyph (U+E000), because the status bar only draws font icons. Rebuild it with `uv run media/harness-launcher-glyph.py` after changing the toolbar SVG. `demo.gif` is the README demo.
 - `esbuild.mjs`: bundles `src/extension.ts` into `dist/extension.js`; `--tests` also bundles the integration suite into `out/test/`.
