@@ -112,6 +112,23 @@ export class Launcher {
     );
   }
 
+  /** The Quick Launch command, for a key binding: the double-click without the mouse. */
+  async quickLaunchCommand(): Promise<void> {
+    const quick = readQuickLaunch(this.settings());
+    if (quick === undefined) {
+      const open = "Open Settings";
+      const answer = await vscode.window.showWarningMessage(
+        `Harness Launcher: quick launch is not configured. Pick a harness in ${SECTION}.quickLaunch.harness.`,
+        open,
+      );
+      if (answer === open) {
+        await vscode.commands.executeCommand("workbench.action.openSettings", `${SECTION}.quickLaunch.harness`);
+      }
+      return;
+    }
+    await this.quickLaunch(quick);
+  }
+
   private async quickLaunch(harnessId: string): Promise<void> {
     const harness = this.currentHarnesses().find((h) => h.id === harnessId);
     if (harness?.enabled === "auto") {

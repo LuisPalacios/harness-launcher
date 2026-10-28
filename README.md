@@ -100,7 +100,16 @@ The extension activates after VS Code finishes starting, only to show its status
 
 Run **Harness Launcher: Open Launcher** from the Command Palette to do the same without the mouse.
 
-To skip the list for the harness I use most, I pick it in `harnessLauncher.quickLaunch.harness`. A double-click on either rocket then starts a **New session** of that harness straight away. A single click still opens the list, a moment later, so a second click has time to arrive.
+To skip the list for the harness I use most, I pick it in `harnessLauncher.quickLaunch.harness`. A double-click on either rocket then starts a **New session** of that harness straight away. A single click still opens the list, a moment later, so a second click has time to arrive. **Harness Launcher: Quick Launch** does the same from the keyboard: I bind it in **Keyboard Shortcuts**, or in `keybindings.json`:
+
+```json
+{
+  "key": "ctrl+alt+h",
+  "command": "harnessLauncher.quickLaunch"
+}
+```
+
+With `quickLaunch.harness` set to `none`, the command warns that quick launch is not configured and offers to open the setting.
 
 **Continue last session** appears only when the CLI has a separate way to do it. For Gemini CLI and opencode, **Resume session** already opens the latest session, so the launcher shows no duplicate item. To hide the status bar button, turn off `harnessLauncher.statusBar.enabled`.
 
