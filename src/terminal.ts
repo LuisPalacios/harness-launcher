@@ -33,8 +33,12 @@ function terminalLocation(setting: TerminalLocationSetting): vscode.TerminalOpti
       return vscode.TerminalLocation.Panel;
     case "editor":
       return vscode.TerminalLocation.Editor;
-    case "editorBeside":
-      return { viewColumn: vscode.ViewColumn.Beside };
+    case "editorBeside": {
+      // An empty group, such as the one a window opens with, takes the session
+      // itself instead of being left blank beside it.
+      const group = vscode.window.tabGroups.activeTabGroup;
+      return { viewColumn: group.tabs.length === 0 ? group.viewColumn : vscode.ViewColumn.Beside };
+    }
   }
 }
 

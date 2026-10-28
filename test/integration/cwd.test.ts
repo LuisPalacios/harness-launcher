@@ -158,6 +158,23 @@ describe("harness settings and commands", () => {
     assert.equal(terminal.name, "Probe Harness");
   });
 
+  it("launch beside an empty group opens the terminal in that group", async () => {
+    await vscode.commands.executeCommand("workbench.action.closeAllGroups");
+    await set({ customHarnesses: [{ id: "probe", label: "Empty Group Probe", command: "node", newArgs: "--version" }] }, Global);
+    const opened = new Promise<vscode.Terminal>((done) => {
+      const listener = vscode.window.onDidOpenTerminal((t) => {
+        listener.dispose();
+        done(t);
+      });
+    });
+    await vscode.commands.executeCommand("harnessLauncher.launch", { harness: "probe", action: "new" });
+    await opened;
+    const groups = vscode.window.tabGroups.all;
+    assert.equal(groups.length, 1, "no blank group is left beside the terminal");
+    assert.ok(groups[0]?.tabs.some((t) => t.label === "Empty Group Probe"));
+    await vscode.commands.executeCommand("workbench.action.closeAllGroups");
+  });
+
   it("launch accepts the continue action from a key binding", async () => {
     await set({ customHarnesses: [{ id: "probe", label: "Continue Probe", command: "node", continueArgs: "--version" }] }, Global);
     const opened = new Promise<vscode.Terminal>((done) => {
