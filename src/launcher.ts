@@ -15,6 +15,7 @@ import {
 import { resolveCwd, type CwdResolution } from "./cwd";
 import type { Detection, Detector } from "./detect";
 import type { Action } from "./harnesses";
+import { normalizeShortcut, withShortcut } from "./keybindings";
 import { displayCommandLine, isDirectory, launchInTerminal } from "./terminal";
 import { Notices, SECTION, settingsReader, workspaceSnapshot } from "./workspace";
 
@@ -28,8 +29,18 @@ const ACTION_ITEMS: readonly { readonly action: Action; readonly icon: string; r
   { action: "resume", icon: "history", title: "Resume session" },
 ];
 
+const QUICK_LAUNCH_COMMAND = `${SECTION}.quickLaunch`;
+
 function settingsQuery(harness: Harness): string {
   return harness.source === "builtin" ? `${SECTION}.${harness.id}` : `${SECTION}.customHarnesses`;
+}
+
+function textTabUri(tab: vscode.Tab): string | undefined {
+  return tab.input instanceof vscode.TabInputText ? tab.input.uri.toString() : undefined;
+}
+
+function textTabs(): vscode.Tab[] {
+  return vscode.window.tabGroups.all.flatMap((g) => g.tabs).filter((t) => textTabUri(t) !== undefined);
 }
 
 export class Launcher {
@@ -117,36 +128,105 @@ export class Launcher {
   async quickLaunchCommand(): Promise<void> {
     const quick = readQuickLaunch(this.settings());
     if (quick === undefined) {
-      const open = "Open Settings";
-      const answer = await vscode.window.showWarningMessage(
-        `Harness Launcher: quick launch is not configured. Pick a harness in ${SECTION}.quickLaunch.harness.`,
-        open,
-      );
-      if (answer === open) {
-        await vscode.commands.executeCommand("workbench.action.openSettings", `${SECTION}.quickLaunch.harness`);
-      }
+      await this.quickLaunchNotConfigured();
       return;
     }
     await this.quickLaunch(quick);
   }
 
   /**
-   * Lets the Quick Launch key binding through terminals, which otherwise send
-   * keys to the shell, then opens Keyboard Shortcuts on the command. There is
-   * no API to write `keybindings.json`, so the user records the keys.
+   * Binds Quick Launch to a typed shortcut in the user's keybindings.json and
+   * lets that shortcut through terminals, which otherwise send every key to the
+   * shell. A string argument skips the prompt.
    */
-  async setUpQuickLaunchShortcut(): Promise<void> {
-    const command = `${SECTION}.quickLaunch`;
+  async setQuickLaunchShortcut(typed?: unknown): Promise<void> {
+    const quick = readQuickLaunch(this.settings());
+    if (quick === undefined) {
+      await this.quickLaunchNotConfigured();
+      return;
+    }
+    const label = this.currentHarnesses().find((h) => h.id === quick)?.label ?? quick;
+    const input =
+      typeof typed === "string"
+        ? typed
+        : await vscode.window.showInputBox({
+            title: "Harness Launcher: Quick Launch shortcut",
+            prompt: `Keys that start a new ${label} session, also from a terminal. Type them as text, for example shift+alt+l or ctrl+k l.`,
+            placeHolder: "shift+alt+l",
+            validateInput: (value) => {
+              const key = normalizeShortcut(value);
+              return key.ok ? undefined : key.error;
+            },
+          });
+    if (input === undefined) {
+      return;
+    }
+    const key = normalizeShortcut(input);
+    if (!key.ok) {
+      void vscode.window.showErrorMessage(`Harness Launcher: ${key.error}.`);
+      return;
+    }
+    const failure = await this.saveKeybinding(QUICK_LAUNCH_COMMAND, key.value);
+    if (failure !== undefined) {
+      this.log.warn(`shortcut ${key.value}: ${failure}`);
+      void vscode.window.showErrorMessage(`Harness Launcher: ${failure}.`);
+      return;
+    }
     const terminal = vscode.workspace.getConfiguration("terminal.integrated");
-    const skip = withCommandSkippingShell(terminal.inspect("commandsToSkipShell")?.globalValue, command);
+    const skip = withCommandSkippingShell(terminal.inspect("commandsToSkipShell")?.globalValue, QUICK_LAUNCH_COMMAND);
     if (skip !== undefined) {
       await terminal.update("commandsToSkipShell", skip, vscode.ConfigurationTarget.Global);
-      this.log.info(`shortcut setup: added ${command} to terminal.integrated.commandsToSkipShell`);
     }
-    await vscode.commands.executeCommand("workbench.action.openGlobalKeybindings", command);
-    void vscode.window.showInformationMessage(
-      "Harness Launcher: double-click Harness Launcher: Quick Launch, press the keys you want, then Enter. The shortcut also works while a terminal has focus.",
+    this.log.info(`shortcut ${key.value}: bound to ${QUICK_LAUNCH_COMMAND}${skip === undefined ? "" : ", added to terminal.integrated.commandsToSkipShell"}`);
+    void vscode.window.showInformationMessage(`Harness Launcher: ${key.value} now starts a new ${label} session, also from a terminal.`);
+  }
+
+  /**
+   * Edits keybindings.json through its editor, so the file of the active
+   * profile is the one that changes. Returns why it could not, or undefined.
+   */
+  private async saveKeybinding(command: string, key: string): Promise<string | undefined> {
+    const openBefore = new Set(textTabs().map(textTabUri));
+
+    await vscode.commands.executeCommand("workbench.action.openGlobalKeybindingsFile");
+    const editor = vscode.window.activeTextEditor;
+    if (editor === undefined || !editor.document.uri.path.endsWith("/keybindings.json")) {
+      return "could not open keybindings.json";
+    }
+    const doc = editor.document;
+    if (doc.isDirty) {
+      return "keybindings.json has unsaved changes; save or revert them, then try again";
+    }
+    const text = doc.getText();
+    const next = withShortcut(text, command, key, {
+      insertSpaces: editor.options.insertSpaces !== false,
+      tabSize: typeof editor.options.tabSize === "number" ? editor.options.tabSize : 4,
+      eol: doc.eol === vscode.EndOfLine.CRLF ? "\r\n" : "\n",
+    });
+    if (!next.ok) {
+      return next.error;
+    }
+    const edit = new vscode.WorkspaceEdit();
+    edit.replace(doc.uri, new vscode.Range(doc.positionAt(0), doc.positionAt(text.length)), next.value);
+    if (!(await vscode.workspace.applyEdit(edit)) || !(await doc.save())) {
+      return "could not save keybindings.json";
+    }
+    const tab = textTabs().find((t) => textTabUri(t) === doc.uri.toString());
+    if (tab !== undefined && !openBefore.has(doc.uri.toString())) {
+      await vscode.window.tabGroups.close(tab);
+    }
+    return undefined;
+  }
+
+  private async quickLaunchNotConfigured(): Promise<void> {
+    const open = "Open Settings";
+    const answer = await vscode.window.showWarningMessage(
+      `Harness Launcher: quick launch is not configured. Pick a harness in ${SECTION}.quickLaunch.harness.`,
+      open,
     );
+    if (answer === open) {
+      await vscode.commands.executeCommand("workbench.action.openSettings", `${SECTION}.quickLaunch.harness`);
+    }
   }
 
   private async quickLaunch(harnessId: string): Promise<void> {

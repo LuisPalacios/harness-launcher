@@ -171,16 +171,26 @@ describe("harness settings and commands", () => {
     assert.equal(terminal.name, "Continue Probe");
   });
 
-  it("the shortcut setup lets Quick Launch through terminals, once", async () => {
+  it("set shortcut key binds Quick Launch in keybindings.json and lets it through terminals, once", async () => {
     const terminal = vscode.workspace.getConfiguration("terminal.integrated");
     await terminal.update("commandsToSkipShell", ["-workbench.action.quickOpen"], Global);
-    for (let i = 0; i < 2; i++) {
-      await vscode.commands.executeCommand("harnessLauncher.setUpQuickLaunchShortcut");
-    }
+    await set({ "quickLaunch.harness": "claude" }, Global);
+    await vscode.commands.executeCommand("harnessLauncher.setQuickLaunchShortcut", "Shift+Alt+L");
+    await vscode.commands.executeCommand("harnessLauncher.setQuickLaunchShortcut", "ctrl+k l");
+
+    const tabs = vscode.window.tabGroups.all.flatMap((g) => g.tabs);
+    const file = tabs.find((t) => t.input instanceof vscode.TabInputText && t.input.uri.path.endsWith("/keybindings.json"));
+    assert.equal(file, undefined, "keybindings.json is closed again");
+    await vscode.commands.executeCommand("workbench.action.openGlobalKeybindingsFile");
+    const text = vscode.window.activeTextEditor?.document.getText() ?? "";
     await vscode.commands.executeCommand("workbench.action.closeActiveEditor");
+    const bound = [...text.matchAll(/"key": "([^"]+)",\s*"command": "harnessLauncher\.quickLaunch"/g)].map((m) => m[1]);
+    assert.deepEqual(bound, ["ctrl+k l"]);
+
     const skip = vscode.workspace.getConfiguration("terminal.integrated").inspect("commandsToSkipShell")?.globalValue;
     assert.deepEqual(skip, ["-workbench.action.quickOpen", "harnessLauncher.quickLaunch"]);
     await terminal.update("commandsToSkipShell", undefined, Global);
+    await set({ "quickLaunch.harness": undefined }, Global);
   });
 
   it("open shows the quick pick without throwing", async () => {

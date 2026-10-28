@@ -15,6 +15,8 @@ const common = {
   // VS Code 1.93 runs extensions on Electron 30 (Node 20).
   target: "node20",
   external: ["vscode"],
+  // jsonc-parser's "main" is a UMD build whose requires esbuild cannot follow.
+  mainFields: ["module", "main"],
   logLevel: "info",
 };
 

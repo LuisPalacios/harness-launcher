@@ -75,7 +75,7 @@ export function activate(context: vscode.ExtensionContext): HarnessLauncherApi {
     vscode.commands.registerCommand("harnessLauncher.open", () => launcher.open()),
     vscode.commands.registerCommand("harnessLauncher.click", () => launcher.click()),
     vscode.commands.registerCommand("harnessLauncher.quickLaunch", () => launcher.quickLaunchCommand()),
-    vscode.commands.registerCommand("harnessLauncher.setUpQuickLaunchShortcut", () => launcher.setUpQuickLaunchShortcut()),
+    vscode.commands.registerCommand("harnessLauncher.setQuickLaunchShortcut", (key: unknown) => launcher.setQuickLaunchShortcut(key)),
     vscode.commands.registerCommand("harnessLauncher.launch", (args: unknown) => {
       if (!isLaunchArgs(args)) {
         void vscode.window.showErrorMessage(
