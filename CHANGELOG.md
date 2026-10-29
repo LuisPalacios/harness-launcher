@@ -2,6 +2,13 @@
 
 All notable changes to this extension are documented here. The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and the project uses [Semantic Versioning](https://semver.org/).
 
+## [Unreleased]
+
+### Changed
+
+- `cwd.mode` at `workspaceFile` no longer warns in a window without a `.code-workspace` file; the terminal quietly starts in the opened folder, or in your home folder. An unsaved (untitled) multi-root workspace still warns, because saving it fixes the mode.
+- The `cwd.mode` description explains that VS Code, not the extension, stores Workspace-level values in the `.code-workspace` file.
+
 ## [0.5.0] - 2026-10-28
 
 ### Changed
