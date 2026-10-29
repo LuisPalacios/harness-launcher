@@ -165,7 +165,7 @@
               "Ask every time: the hub folder or any workspace folder.",
               "The absolute path in `#harnessLauncher.cwd.path#`."
             ],
-            "markdownDescription": "Working directory of the new terminal. When the mode cannot resolve (for example `workspaceFile` in a single-folder window), the terminal starts in the first workspace folder, then in your home folder, and a warning names the mode that failed. Set it at **Workspace** level to store the rule inside the `.code-workspace` file, so each hub carries its own.",
+            "markdownDescription": "Working directory of the new terminal. Without a `.code-workspace` file (a single folder or an empty window), `workspaceFile` quietly starts in the opened folder, or in your home folder. When any other mode cannot resolve, the terminal falls back the same way and a warning names the mode that failed.\n\nTo use a different mode in one multi-root workspace, change it on the **Workspace** tab of this Settings editor. VS Code saves workspace settings in that workspace's `.code-workspace` file; Harness Launcher only reads them.",
             "scope": "window",
             "order": 1
           },

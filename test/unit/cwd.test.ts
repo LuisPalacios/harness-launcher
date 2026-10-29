@@ -28,9 +28,9 @@ describe("resolveCwd", () => {
     expect(resolveCwd(settings({}), hub, posix)).toEqual({ kind: "resolved", path: "/work/hub", mode: "workspaceFile" });
   });
 
-  test("workspaceFile in a single-folder window falls back to the first folder", () => {
+  test("workspaceFile in a single-folder window starts in that folder without a warning", () => {
     const r = resolveCwd(settings({}), singleFolder, posix);
-    expect(r).toMatchObject({ kind: "resolved", path: "/work/solo", mode: "firstFolder", failure: { mode: "workspaceFile" } });
+    expect(r).toEqual({ kind: "resolved", path: "/work/solo", mode: "firstFolder" });
   });
 
   test("an untitled workspace is not a hub", () => {
@@ -45,7 +45,7 @@ describe("resolveCwd", () => {
   });
 
   test("an empty window falls back to home", () => {
-    expect(resolveCwd(settings({}), empty, posix)).toMatchObject({ path: "/home/me", mode: "home", failure: { mode: "workspaceFile" } });
+    expect(resolveCwd(settings({}), empty, posix)).toEqual({ kind: "resolved", path: "/home/me", mode: "home" });
     expect(resolveCwd(settings({ mode: "firstFolder" }), empty, posix)).toMatchObject({ path: "/home/me", mode: "home" });
   });
 
