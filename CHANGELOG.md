@@ -2,7 +2,7 @@
 
 All notable changes to this extension are documented here. The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and the project uses [Semantic Versioning](https://semver.org/).
 
-## [Unreleased]
+## [0.5.1] - 2026-11-01
 
 ### Changed
 
@@ -60,6 +60,7 @@ First release.
 - Workspace Trust support: untrusted workspaces cannot change commands, arguments or paths.
 - **Harness Launcher** log output channel with detection results and launches.
 
+[0.5.1]: https://github.com/LuisPalacios/harness-launcher/releases/tag/v0.5.1
 [0.5.0]: https://github.com/LuisPalacios/harness-launcher/releases/tag/v0.5.0
 [0.4.0]: https://github.com/LuisPalacios/harness-launcher/releases/tag/v0.4.0
 [0.3.0]: https://github.com/LuisPalacios/harness-launcher/releases/tag/v0.3.0
