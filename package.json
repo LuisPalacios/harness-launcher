@@ -158,14 +158,14 @@
               "path"
             ],
             "enumDescriptions": [
-              "Folder that contains the saved `.code-workspace` file: the hub of a multi-root workspace.",
+              "The folder that holds the saved `.code-workspace` file, usually the hub of a multi-root workspace. Without one, the opened folder.",
               "The workspace folder whose Explorer name matches `#harnessLauncher.cwd.folderName#`.",
-              "The first folder of the workspace.",
-              "The workspace folder that holds the active editor's file.",
-              "Ask every time: the hub folder or any workspace folder.",
+              "The top folder in the Explorer: the opened folder, or the first entry under `folders` in a `.code-workspace` file.",
+              "The workspace folder that holds the file in the active editor.",
+              "Ask every time. The list offers the `.code-workspace` folder, when there is one, and every workspace folder.",
               "The absolute path in `#harnessLauncher.cwd.path#`."
             ],
-            "markdownDescription": "Working directory of the new terminal. When the mode cannot resolve (for example `workspaceFile` in a single-folder window), the terminal starts in the first workspace folder, then in your home folder, and a warning names the mode that failed. Set it at **Workspace** level to store the rule inside the `.code-workspace` file, so each hub carries its own.",
+            "markdownDescription": "Folder where the new terminal starts. Only `workspaceFile` needs a `.code-workspace` file; every other mode also works when you open a single folder.\n\nWhen the mode finds no folder, the terminal starts in the first workspace folder, or in your home folder in an empty window, and a warning names the mode. One exception: `workspaceFile` without a `.code-workspace` file starts in the opened folder without a warning.\n\nTo use a different mode in one workspace, change it on the **Workspace** tab of Settings instead of **User**. VS Code stores that value in the open `.code-workspace` file, or in `.vscode/settings.json` for a single folder. Harness Launcher only reads it.",
             "scope": "window",
             "order": 1
           },

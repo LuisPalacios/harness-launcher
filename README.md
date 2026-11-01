@@ -172,7 +172,7 @@ Add a CLI that is not built in with `customHarnesses`. An entry with a built-in 
 | `pick`          | Ask each time: the hub or any workspace folder.                   |
 | `path`          | The absolute path in `cwd.path`.                                  |
 
-When a mode cannot resolve, for example `workspaceFile` in a single-folder window, the terminal starts in the first workspace folder, then in your home folder. A warning names the mode that failed, once per session.
+Without a `.code-workspace` file, in a single-folder or empty window, `workspaceFile` quietly starts in the opened folder, or in your home folder. When any other mode cannot resolve, the terminal falls back the same way, and a warning names the mode that failed, once per session.
 
 ## Multi-root hubs
 

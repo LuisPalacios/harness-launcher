@@ -60,6 +60,12 @@ export function resolveCwd(
     return fallback({ mode: "pick", reason: "the window has no workspace folders" }, ws);
   }
 
+  // workspaceFile is the default, so a window without a .code-workspace file
+  // (single folder or empty) is normal: start in the opened folder, no warning.
+  if (settings.mode === "workspaceFile" && ws.workspaceFile === undefined) {
+    return fallback(undefined, ws);
+  }
+
   const attempt = attemptMode(settings, ws, path);
   if (attempt.ok) {
     return { kind: "resolved", path: attempt.path, mode: settings.mode };
@@ -114,12 +120,13 @@ function firstFolder(ws: WorkspaceSnapshot): Attempt {
   return first === undefined ? { ok: false, reason: "the window has no workspace folders" } : { ok: true, path: first.fsPath };
 }
 
-function fallback(failure: CwdFailure, ws: WorkspaceSnapshot): CwdResolution {
+function fallback(failure: CwdFailure | undefined, ws: WorkspaceSnapshot): CwdResolution {
   const first = ws.folders[0];
-  if (first !== undefined) {
-    return { kind: "resolved", path: first.fsPath, mode: "firstFolder", failure };
-  }
-  return { kind: "resolved", path: ws.home, mode: "home", failure };
+  const resolved =
+    first !== undefined
+      ? ({ kind: "resolved", path: first.fsPath, mode: "firstFolder" } as const)
+      : ({ kind: "resolved", path: ws.home, mode: "home" } as const);
+  return failure === undefined ? resolved : { ...resolved, failure };
 }
 
 function pickCandidates(ws: WorkspaceSnapshot, path: nodePath.PlatformPath): PickCandidate[] {
